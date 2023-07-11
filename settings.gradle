@@ -1,0 +1,25 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = "Susanin"
+include ':app'
+include ':app:navigation'
+include ':app:core'
+include ':app:bottomnav'
+include ':app:feed'
+include ':app:video'
+include ':app:tree'
+include ':app:miniplayer'
+include ':app:search'
+include ':app:settings'
