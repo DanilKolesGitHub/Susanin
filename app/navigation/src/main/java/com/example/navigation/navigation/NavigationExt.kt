@@ -15,6 +15,7 @@ import com.example.navigation.state.HostState
 
 fun <State: HostState, Ui: Any> ScreenContext.childScreens(
     navigationHolder: NavigationHolder<State>,
+    handleBackButton: Boolean,
     tag: String,
     stateMapper: (state: State, children: List<Child<ScreenParams, Screen<*>>>) -> Ui,
     saveState: (state: State) -> ParcelableContainer?,
@@ -39,7 +40,7 @@ fun <State: HostState, Ui: Any> ScreenContext.childScreens(
         key = tag,
         initialState = { navigationHolder.state },
         navTransformer = { state, event -> event.transformer(state) },
-        backTransformer = navigationHolder.navigator::back,
+        backTransformer = { if (handleBackButton) navigationHolder.navigator.back(it) else null },
         onEventComplete = { event, newState, oldState -> event.onComplete(newState, oldState) },
         stateMapper = stateMapper,
         onStateChanged = { newState, oldState -> navigationHolder.state = newState },

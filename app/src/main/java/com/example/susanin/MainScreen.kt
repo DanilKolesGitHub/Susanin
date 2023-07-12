@@ -11,13 +11,13 @@ import com.example.navigation.router.ScreenRegister
 import com.example.navigation.screens.Screen
 import com.example.navigation.screens.ScreenFactory
 import com.example.navigation.screens.ViewScreen
-import com.example.navigation.stack.StackHostView
-import com.example.navigation.stack.stack
+import com.example.navigation.slot.SlotHostView
+import com.example.navigation.slot.slot
 import com.example.navigation.view.ForwardBackwardBehaviour
 
 class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, MainScreenParams) {
 
-    val stack = stack(
+    val slot = slot(
         ResultScreenParams("0")
     )
 
@@ -26,8 +26,8 @@ class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, 
     }
 
     override fun onViewCreated(view: View) {
-        val routerView: StackHostView = view.findViewById(R.id.router)
-        routerView.observe(stack, lifecycle, animationBehaviour = ForwardBackwardBehaviour)
+        val routerView: SlotHostView = view.findViewById(R.id.router)
+        routerView.observe(slot, lifecycle, animationBehaviour = ForwardBackwardBehaviour)
     }
 
 }

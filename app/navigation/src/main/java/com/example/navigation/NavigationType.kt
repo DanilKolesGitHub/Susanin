@@ -1,5 +1,6 @@
 package com.example.navigation
 
 enum class NavigationType {
-    STACK
+    STACK,
+    SLOT,
 }

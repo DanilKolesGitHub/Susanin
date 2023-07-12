@@ -16,7 +16,7 @@
 <!--        android:layout_height="wrap_content"-->
 <!--        android:textSize="50sp"/>-->
 
-    <com.example.navigation.stack.StackHostView
+    <com.example.navigation.slot.SlotHostView
         android:id="@+id/router"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>

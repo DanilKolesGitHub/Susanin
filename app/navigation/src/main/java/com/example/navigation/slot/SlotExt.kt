@@ -1,7 +1,7 @@
-package com.example.navigation.stack
+package com.example.navigation.slot
 
 import com.arkivanov.decompose.Child
-import com.arkivanov.decompose.router.stack.ChildStack
+import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.parcelable.ParcelableContainer
 import com.arkivanov.essenty.parcelable.consumeRequired
@@ -11,31 +11,27 @@ import com.example.navigation.navigation.childScreens
 import com.example.navigation.screens.Screen
 import com.example.navigation.screens.ScreenParams
 
-fun ScreenContext.stack(
-    initial: ScreenParams,
-    addInitial: Boolean = false,
+fun ScreenContext.slot(
+    initial: ScreenParams?,
     handleBackButton: Boolean = true,
     tag: String = NavigationType.STACK.name,
-) = stack (
-    initial = { listOf(initial) },
-    addInitial = addInitial,
+) = slot (
+    initial = { initial },
     handleBackButton = handleBackButton,
     tag = tag,
 )
 
-fun ScreenContext.stack(
-    initial: () -> List<ScreenParams>,
-    addInitial: Boolean = false,
+fun ScreenContext.slot(
+    initial: () -> ScreenParams?,
     handleBackButton: Boolean = true,
-    tag: String = NavigationType.STACK.name,
-): Value<ChildStack<ScreenParams, Screen<*>>> {
+    tag: String = NavigationType.SLOT.name,
+): Value<ChildSlot<ScreenParams, Screen<*>>> {
     val navigationHolder = node.provideNavigation(tag) { pending ->
-        val initialScreens = when {
+        val initialScreen = when {
             pending.isNullOrEmpty() -> initial()
-            addInitial -> initial() + pending
-            else -> pending
+            else -> pending.lastOrNull()
         }
-        StackNavigationHolder(tag, initialScreens)
+        SlotNavigationHolder(tag, initialScreen)
     }
     return childScreens(
         navigationHolder = navigationHolder,
@@ -43,14 +39,10 @@ fun ScreenContext.stack(
         tag = tag,
         stateMapper =  { _, children ->
             @Suppress("UNCHECKED_CAST")
-            val createdChildren = children as List<Child.Created<ScreenParams, Screen<*>>>
-
-            ChildStack(
-                active = createdChildren.last(),
-                backStack = createdChildren.dropLast(1),
-            )
+            val createdChild= children.firstOrNull()  as? Child.Created?
+            ChildSlot(createdChild)
         },
         saveState = { ParcelableContainer(it) },
-        restoreState = { it.consumeRequired(StackHostState::class) }
+        restoreState = { it.consumeRequired(SlotHostState::class) }
     )
 }

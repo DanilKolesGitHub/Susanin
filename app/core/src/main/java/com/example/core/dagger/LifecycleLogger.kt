@@ -1,6 +1,5 @@
 package com.example.core.dagger
 
-import androidx.lifecycle.LifecycleOwner
 import com.arkivanov.essenty.lifecycle.Lifecycle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
