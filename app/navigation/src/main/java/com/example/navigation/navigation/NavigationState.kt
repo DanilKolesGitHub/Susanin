@@ -66,7 +66,7 @@ class NavigationNode(
         return holder as NavigationHolder<S>
     }
 
-    internal fun findHolder(tag: String): NavigationHolder<*>? {
+    fun findHolder(tag: String): NavigationHolder<*>? {
         return navigators[tag] as? NavigationHolder<*>
     }
 

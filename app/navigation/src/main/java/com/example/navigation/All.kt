@@ -28,7 +28,7 @@ class SearchScreenParams(): ScreenParams
 class InputScreenParams(): ScreenParams
 
 @Parcelize
-class ResultScreenParams(val result: String): ScreenParams
+data class ResultScreenParams(val result: String): ScreenParams
 
 @Parcelize
 class SettingsScreenParams(): ScreenParams

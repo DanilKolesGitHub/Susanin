@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.arkivanov.decompose.ComponentContext
+import com.example.navigation.NavigationType
 import com.example.navigation.ResultScreenParams
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.screens.Screen
@@ -23,6 +24,13 @@ class ResultScreen(context: ScreenContext, type: ResultScreenParams): ViewScreen
     override fun onViewCreated(container: View) {
         val text: TextView = container.findViewById(R.id.result)
         text.text = params.result
+        text.setOnClickListener {
+            navigate(ResultScreenParams(params.result+"0"))
+        }
+    }
+
+    private fun navigate(resultScreenParams: ResultScreenParams) {
+        node.parent!!.findHolder(NavigationType.STACK.name)!!.navigator.open(resultScreenParams)
     }
 
 }

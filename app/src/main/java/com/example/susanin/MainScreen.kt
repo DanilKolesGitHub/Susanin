@@ -13,6 +13,7 @@ import com.example.navigation.screens.ScreenFactory
 import com.example.navigation.screens.ViewScreen
 import com.example.navigation.stack.StackHostView
 import com.example.navigation.stack.stack
+import com.example.navigation.view.ForwardBackwardBehaviour
 
 class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, MainScreenParams) {
 
@@ -26,7 +27,7 @@ class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, 
 
     override fun onViewCreated(view: View) {
         val routerView: StackHostView = view.findViewById(R.id.router)
-        routerView.observe(stack, lifecycle)
+        routerView.observe(stack, lifecycle, animationBehaviour = ForwardBackwardBehaviour)
     }
 
 }
