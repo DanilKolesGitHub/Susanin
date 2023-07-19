@@ -3,8 +3,11 @@ package com.example.navigation.slot
 import android.animation.Animator
 import android.animation.AnimatorSet
 import android.content.Context
+import android.os.Parcelable
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.animation.addListener
 import androidx.core.animation.doOnStart
 import com.arkivanov.decompose.router.slot.ChildSlot
@@ -23,8 +26,7 @@ class SlotHostView @JvmOverloads constructor(
 ) : HostView(context, attrs, defStyleAttr) {
 
     private var currentSlot: ChildSlot<*, *>? = null
-    private var animator: Animator? = null
-    private var animationBehaviour: AnimationBehaviour? = null
+    private var afterRestore: Boolean = false
 
     fun <C : Any, T : ViewRender> observe(
         slot: Value<ChildSlot<C, T>>,
@@ -62,7 +64,7 @@ class SlotHostView @JvmOverloads constructor(
             // Новый экран был в стеке, поэтому проигрываем анимацию в обратную сторону.
             val type = hasAnimation(currentChild, activeChild)
             // Нужно анимировать если уже есть view и указана анимация
-            if (type != null) {
+            if (type != null && !afterRestore) {
                 animateChange(currentChild, activeChild, type) {
                     switchCurrent(currentChild, activeChild, slot)
                 }
@@ -72,6 +74,7 @@ class SlotHostView @JvmOverloads constructor(
         } else {
             clearInactive()
         }
+        afterRestore = false
     }
 
     private fun switchCurrent(current: ActiveChild<*, *>?, active: ActiveChild<*, *>?, slot: ChildSlot<*, *>) {
@@ -82,20 +85,14 @@ class SlotHostView @JvmOverloads constructor(
         this.currentSlot = slot
     }
 
-    private fun<C : Any, T : ViewRender> hasAnimation(
-        current: ActiveChild<C, T>?,
-        active: ActiveChild<C, T>?,
+    private fun hasAnimation(
+        current: ActiveChild<*, *>?,
+        active: ActiveChild<*, *>?,
     ): ChangeType?{
         return when {
-            current == null && active == null -> null
-            current != null && active == null -> Close(current, current.child.instance.animationBehaviour ?: animationBehaviour)
-            current == null && active != null -> Open(active, active.child.instance.animationBehaviour ?: animationBehaviour)
-            current != null && active != null -> Switch(
-                current,
-                active,
-                current.child.instance.animationBehaviour ?: animationBehaviour,
-                active.child.instance.animationBehaviour ?: animationBehaviour
-            )
+            current != null && active == null -> Close(current)
+            current == null && active != null -> Open(active)
+            current != null && active != null -> Switch(current, active)
             else -> null
         }
     }
@@ -130,38 +127,40 @@ class SlotHostView @JvmOverloads constructor(
     }
 
     private sealed interface ChangeType {
-        fun animator(parent: View): Animator?
+        fun animator(parent: ViewGroup): Animator?
     }
 
     private class Open(
-        val child: ActiveChild<Any, Any>,
-        val animationBehaviour: AnimationBehaviour?
+        val child: ActiveChild<*, *>,
     ): ChangeType {
 
-        override fun animator(parent: View): Animator? {
-            return animationBehaviour?.open(parent, child.view)
+        override fun animator(parent: ViewGroup): Animator? {
+            return child.animationBehaviour?.open(parent, child.view, parent)
         }
     }
 
     private class Close(
-        val child: ActiveChild<Any, Any>,
-        val animationBehaviour: AnimationBehaviour?
+        val child: ActiveChild<*, *>,
     ): ChangeType {
 
-        override fun animator(parent: View): Animator? {
-            return animationBehaviour?.close(child.view, parent)
+        override fun animator(parent: ViewGroup): Animator? {
+            return child.animationBehaviour?.close(child.view, parent, parent)
         }
     }
 
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        afterRestore = state != null
+        super.onRestoreInstanceState(state)
+    }
+
     private class Switch(
-        val closeChild: ActiveChild<Any, Any>,
-        val openChild: ActiveChild<Any, Any>,
-        val closeBehaviour: AnimationBehaviour?,
-        val openBehaviour: AnimationBehaviour?
+        val closeChild: ActiveChild<*, *>,
+        val openChild: ActiveChild<*, *>,
     ): ChangeType {
-        override fun animator(parent: View): Animator? {
-            val closeAnimator = closeBehaviour?.close(closeChild.view, parent)
-            val openAnimator = openBehaviour?.open(parent, openChild.view)
+
+        override fun animator(parent: ViewGroup): Animator? {
+            val closeAnimator = closeChild.animationBehaviour?.close(closeChild.view, parent, parent)
+            val openAnimator = openChild.animationBehaviour?.open(parent, openChild.view, parent)
             if  (openAnimator != null) {
                 openChild.view.visibility = GONE
                 openAnimator.doOnStart { openChild.view.visibility = VISIBLE }

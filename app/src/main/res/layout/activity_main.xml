@@ -7,6 +7,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="Clear"
+        android:id="@+id/clear_button"/>
+
 <!--    <TextView-->
 <!--        android:textColor="@color/black"-->
 <!--        app:layout_constraintTop_toTopOf="parent"-->

@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import com.example.navigation.InputScreenParams
+import com.example.navigation.NavigationType
 import com.example.navigation.ResultScreenParams
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.screens.ViewScreen
@@ -24,7 +25,12 @@ class InputScreen(context: ScreenContext, type: InputScreenParams): ViewScreen<I
         val result: Button = container.findViewById(R.id.result)
 
         result.setOnClickListener {
-            val result = ResultScreenParams(input.text.toString())
+            navigate(ResultScreenParams(input.text.toString()))
         }
     }
+
+    private fun navigate(resultScreenParams: ResultScreenParams) {
+        node.parent!!.findHolder(NavigationType.STACK.name)!!.navigator.open(resultScreenParams)
+    }
+
 }

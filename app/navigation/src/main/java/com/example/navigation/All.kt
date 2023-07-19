@@ -1,6 +1,9 @@
 package com.example.navigation
 
 import com.example.navigation.screens.ScreenParams
+import com.example.navigation.view.AnimationBehaviour
+import com.example.navigation.view.AnimationProvider
+import com.example.navigation.view.UpBottomBehaviour
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
@@ -22,13 +25,15 @@ class TreeScreenParams(): ScreenParams
 class PlayerScreenParams(): ScreenParams
 
 @Parcelize
-class SearchScreenParams(): ScreenParams
+object SearchScreenParams: ScreenParams
 
 @Parcelize
-class InputScreenParams(): ScreenParams
+object InputScreenParams: ScreenParams
 
 @Parcelize
-data class ResultScreenParams(val result: String): ScreenParams
+data class ResultScreenParams(val result: String): ScreenParams, AnimationProvider{
+    override val animationBehaviour: AnimationBehaviour = UpBottomBehaviour
+}
 
 @Parcelize
 class SettingsScreenParams(): ScreenParams

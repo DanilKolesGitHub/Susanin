@@ -1,6 +1,5 @@
 package com.example.navigation.stack
 
-import android.animation.Animator
 import android.content.Context
 import android.util.AttributeSet
 import android.util.SparseArray
@@ -23,8 +22,6 @@ class StackHostView @JvmOverloads constructor(
 ) : HostView(context, attrs, defStyleAttr) {
 
     private var currentStack: ChildStack<*, *>? = null
-    private var animator: Animator? = null
-    private var animationBehaviour: AnimationBehaviour? = null
 
     fun <C : Any, T : ViewRender> observe(
         stack: Value<ChildStack<C, T>>,
@@ -82,17 +79,17 @@ class StackHostView @JvmOverloads constructor(
         this.currentStack = stack
     }
 
-    private fun<C : Any, T : ViewRender> hasAnimation(
-        current: ActiveChild<C, T>?,
-        active: ActiveChild<C, T>,
+    private fun hasAnimation(
+        current: ActiveChild<*, *>?,
+        active: ActiveChild<*, *>,
         reverse: Boolean,
     ): AnimationBehaviour?{
         if (current == null) return null
         return if (reverse) {
-            current.child.instance.animationBehaviour
+            current.animationBehaviour
         } else {
-            active.child.instance.animationBehaviour
-        } ?: animationBehaviour
+            active.animationBehaviour
+        }
     }
 
     private fun animateChange(
@@ -103,9 +100,9 @@ class StackHostView @JvmOverloads constructor(
         onEnd: () -> Unit
     ) {
         animator = if (reverse)
-            animation.close(current.view, active.view)
+            animation.close(current.view, active.view, this)
         else
-            animation.open(current.view, active.view)
+            animation.open(current.view, active.view, this)
 
         animator?.addListener(
             onStart = {

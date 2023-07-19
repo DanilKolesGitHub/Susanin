@@ -6,6 +6,4 @@ import com.arkivanov.essenty.lifecycle.Lifecycle
 
 interface ViewRender {
     fun createView(parent: ViewGroup, viewLifecycle: Lifecycle): View
-    val animationBehaviour: AnimationBehaviour?
-        get() = null
 }

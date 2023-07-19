@@ -3,6 +3,7 @@ package com.example.susanin
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.children.children
 import com.example.navigation.*
@@ -13,12 +14,15 @@ import com.example.navigation.screens.ScreenFactory
 import com.example.navigation.screens.ViewScreen
 import com.example.navigation.slot.SlotHostView
 import com.example.navigation.slot.slot
+import com.example.navigation.stack.StackHostView
+import com.example.navigation.stack.stack
 import com.example.navigation.view.ForwardBackwardBehaviour
+import com.example.navigation.view.UpBottomBehaviour
 
 class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, MainScreenParams) {
 
     val slot = slot(
-        ResultScreenParams("0")
+        SearchScreenParams
     )
 
     override fun onCreateView(layoutInflater: LayoutInflater, parent: ViewGroup): View {
@@ -28,7 +32,17 @@ class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, 
     override fun onViewCreated(view: View) {
         val routerView: SlotHostView = view.findViewById(R.id.router)
         routerView.observe(slot, lifecycle, animationBehaviour = ForwardBackwardBehaviour)
+        val button: Button = view.findViewById(R.id.clear_button)
+        button.setOnClickListener {
+            navigate()
+        }
     }
+
+
+    private fun navigate() {
+        node.findHolder(NavigationType.SLOT.name)!!.navigator.close(SearchScreenParams)
+    }
+
 
 }
 
