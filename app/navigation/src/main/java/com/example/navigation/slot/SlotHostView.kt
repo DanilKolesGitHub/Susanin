@@ -5,19 +5,19 @@ import android.animation.AnimatorSet
 import android.content.Context
 import android.os.Parcelable
 import android.util.AttributeSet
-import android.util.Log
-import android.view.View
 import android.view.ViewGroup
 import androidx.core.animation.addListener
 import androidx.core.animation.doOnStart
+import androidx.transition.Transition
+import androidx.transition.TransitionManager
+import androidx.transition.TransitionSet
+import androidx.transition.TransitionSet.ORDERING_SEQUENTIAL
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.observe
 import com.arkivanov.essenty.lifecycle.*
-import com.example.navigation.view.AnimationBehaviour
-import com.example.navigation.view.HostView
-import com.example.navigation.view.ViewRender
+import com.example.navigation.view.*
 
 class SlotHostView @JvmOverloads constructor(
     context: Context,
@@ -26,25 +26,49 @@ class SlotHostView @JvmOverloads constructor(
 ) : HostView(context, attrs, defStyleAttr) {
 
     private var currentSlot: ChildSlot<*, *>? = null
+    // В отличии от Stack и Pages анимирует открытие первого экрана.
+    // Поэтому чтобы не анимировать ранее открытый экран после восстанавления состояния,
+    // используется флаг.
     private var afterRestore: Boolean = false
 
+    /**
+     * Подписывается на изменение ChildSlot<C, T> и отрисовывает View.
+     * T должен наследовать ViewRender.
+     *
+     * @param slot Источник ChildSlot
+     * @param hostViewLifecycle Родительский ЖЦ в котором находится SlotHostView.
+     * Нужен для создания дочерних view. Если умирает, то и все дочерние тоже умирают.
+     * @param transitionProvider Анимация изменений в SlotHostView.
+     */
     fun <C : Any, T : ViewRender> observe(
         slot: Value<ChildSlot<C, T>>,
-        hostViewLifecycle: Lifecycle, // view lifecycle
-        animationBehaviour: AnimationBehaviour? = null,
+        hostViewLifecycle: Lifecycle,
+        transitionProvider: TransitionProvider? = null,
     ) {
-        this.animationBehaviour = animationBehaviour
-        hostViewLifecycle.doOnDestroy { animator?.end() }
-        slot.observe(hostViewLifecycle) {
+        this.transitionProvider = transitionProvider
+        // Если родитель умирает останавливаем анимацию.
+        hostViewLifecycle.doOnDestroy { endTransition() }
+        // Реагируем на изменения только в состоянии STARTED и выше.
+        // Поскольку в этом состоянии находится View во время анимации.
+        // Если поднять до RESUMED, то экран анимирует свое открытие и только потом отрисует содержимое.
+        // Те во время анимации будет пустым.
+        slot.observe(hostViewLifecycle, ObserveLifecycleMode.START_STOP) {
             onSlotChanged(it, hostViewLifecycle)
         }
     }
 
+    /**
+     * Обновляет slot.
+     *
+     * @param slot Новый ChildSlot
+     * @param hostViewLifecycle ЖЦ родительской View
+     */
     private fun <C : Any, T : ViewRender> onSlotChanged(
         slot: ChildSlot<C, T>,
         hostViewLifecycle: Lifecycle,
     ) {
-        animator?.end()
+        endTransition() // Останавливаем анимацию прошлого изменения.
+
         @Suppress("UNCHECKED_CAST")
         val currentSlot = currentSlot as ChildSlot<C, T>?
 
@@ -52,129 +76,70 @@ class SlotHostView @JvmOverloads constructor(
         val currentChild = currentChild as ActiveChild<C, T>?
 
         if (currentChild?.child?.configuration != slot.child?.configuration) {
-            val activeChild =  if (slot.child != null) {
-                val slotChild = slot.child!!
-                val created = createActiveChild(hostViewLifecycle,slotChild)
-                this.addView(created.view)
-                created
-            } else {
-                null
+            // Создаем новый активный экран.
+            val activeChild = slot.child?.let {
+                createActiveChild(hostViewLifecycle, it)
             }
-            clearInactive()
-            // Новый экран был в стеке, поэтому проигрываем анимацию в обратную сторону.
-            val type = hasAnimation(currentChild, activeChild)
-            // Нужно анимировать если уже есть view и указана анимация
-            if (type != null && !afterRestore) {
-                animateChange(currentChild, activeChild, type) {
-                    switchCurrent(currentChild, activeChild, slot)
+            // Анимируем изменения. Или нет если нет анимации.
+            // Во время анимации текущая и новая view в состоянии STARTED.
+            // По окончании анимации новая RESUMED, а текущая DESTROYED.
+            beginTransition(provideTransition(currentChild, activeChild),
+                onStart = {
+                    activeChild?.lifecycle?.start()
+                    currentChild?.lifecycle?.pause()
+                },
+                onEnd = {
+                    currentChild?.lifecycle?.destroy()
+                    activeChild?.lifecycle?.resume()
+                    this.currentChild = activeChild
+                    this.currentSlot = slot
                 }
-            } else {
-                switchCurrent(currentChild, activeChild, slot)
-            }
-        } else {
-            clearInactive()
+            )
+            currentChild?.view?.let(::removeView)
+            activeChild?.view?.let(::addView)
         }
+        clearInactive()
         afterRestore = false
     }
 
-    private fun switchCurrent(current: ActiveChild<*, *>?, active: ActiveChild<*, *>?, slot: ChildSlot<*, *>) {
-        current?.lifecycle?.destroy()
-        active?.lifecycle?.resume()
-        this.removeView(currentChild?.view)
-        this.currentChild = active
-        this.currentSlot = slot
-    }
-
-    private fun hasAnimation(
+    /**
+     * Предоставляет анимацию.
+     * Для каждого экрана использует соответствующую анимацию открытия и закрытия.
+     * Конечно если экраны существуют.
+     *
+     * @param current Текущий экран.
+     * @param active Новый экран.
+     */
+    private fun provideTransition(
         current: ActiveChild<*, *>?,
         active: ActiveChild<*, *>?,
-    ): ChangeType?{
+    ): Transition? {
+        if (afterRestore) return null
+        val currentTransition = current?.let {
+            it.transition?.addTarget(it.view)
+        }
+        val activeTransition = active?.let {
+            it.transition?.addTarget(it.view)
+        }
         return when {
-            current != null && active == null -> Close(current)
-            current == null && active != null -> Open(active)
-            current != null && active != null -> Switch(current, active)
+            currentTransition != null && activeTransition == null -> currentTransition
+            currentTransition == null && activeTransition != null -> activeTransition
+            currentTransition != null && activeTransition != null ->
+                TransitionSet()
+                    .setOrdering(ORDERING_SEQUENTIAL)
+                    .addTransition(currentTransition)
+                    .addTransition(activeTransition)
             else -> null
         }
     }
 
-    private fun animateChange(
-        current: ActiveChild<*, *>?,
-        active: ActiveChild<*, *>?,
-        changeType: ChangeType,
-        onEnd: () -> Unit
-    ) {
-        animator = changeType.animator(this)
-        if (animator != null) {
-            animator?.addListener(
-                onStart = {
-                    active?.lifecycle?.start()
-                    current?.lifecycle?.pause()
-                },
-                onEnd = {
-                    animator = null
-                    onEnd()
-                }
-            )
-            animator?.start()
-        } else {
-            onEnd()
-        }
-    }
-
-    // Синхронизируем не активные элемнеты с backstack.
     private fun clearInactive() {
+        // Удаляем сохранненные состояния.
         inactiveChildren.clear()
-    }
-
-    private sealed interface ChangeType {
-        fun animator(parent: ViewGroup): Animator?
-    }
-
-    private class Open(
-        val child: ActiveChild<*, *>,
-    ): ChangeType {
-
-        override fun animator(parent: ViewGroup): Animator? {
-            return child.animationBehaviour?.open(parent, child.view, parent)
-        }
-    }
-
-    private class Close(
-        val child: ActiveChild<*, *>,
-    ): ChangeType {
-
-        override fun animator(parent: ViewGroup): Animator? {
-            child.view.bringToFront()
-            return child.animationBehaviour?.close(child.view, parent, parent)
-        }
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
         afterRestore = state != null
         super.onRestoreInstanceState(state)
     }
-
-    private class Switch(
-        val closeChild: ActiveChild<*, *>,
-        val openChild: ActiveChild<*, *>,
-    ): ChangeType {
-
-        override fun animator(parent: ViewGroup): Animator? {
-            closeChild.view.bringToFront()
-            val closeAnimator = closeChild.animationBehaviour?.close(closeChild.view, parent, parent)
-            val openAnimator = openChild.animationBehaviour?.open(parent, openChild.view, parent)
-            if  (openAnimator != null) {
-                openChild.view.visibility = GONE
-                openAnimator.doOnStart { openChild.view.visibility = VISIBLE }
-            }
-            return when {
-                closeAnimator != null && openAnimator != null -> AnimatorSet().apply { playSequentially(closeAnimator, openAnimator) }
-                closeAnimator != null && openAnimator == null -> closeAnimator
-                closeAnimator == null && openAnimator != null -> openAnimator
-                else -> null
-            }
-        }
-
-    }
-
 }

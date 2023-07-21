@@ -3,6 +3,7 @@ package com.example.feed
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import com.arkivanov.decompose.ComponentContext
 import com.example.navigation.*
 import com.example.navigation.context.ScreenContext
@@ -20,6 +21,18 @@ class FeedScreen(context: ScreenContext, type: FeedScreenParams): ViewScreen<Fee
     ): View {
         return inflater.inflate(R.layout.feed_layout, container, false)
     }
+
+    override fun onViewCreated(view: View) {
+        val image: ImageView = view.findViewById(R.id.search)
+        image.setOnClickListener {
+            navigate()
+        }
+    }
+
+    private fun navigate() {
+        node.parent!!.findHolder(NavigationType.STACK.name)!!.navigator.open(SearchScreenParams)
+    }
+
 }
 
 fun registerFeedScreens(register: ScreenRegister) {

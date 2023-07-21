@@ -14,7 +14,7 @@ import com.example.navigation.router.ScreenRegister
 import com.example.navigation.screens.ScreenFactory
 import com.example.navigation.screens.ScreenParams
 import com.example.navigation.screens.ViewScreen
-import com.example.navigation.view.TopBehaviour
+import com.example.navigation.view.ForwardBackwardTransition
 
 class TabScreen(context: ScreenContext, type: TabScreenParams): ViewScreen<TabScreenParams>(context, type) {
 
@@ -47,9 +47,8 @@ class TabScreen(context: ScreenContext, type: TabScreenParams): ViewScreen<TabSc
 
     override fun onViewCreated(view: View) {
         val host: PagesHostView = view.findViewById(R.id.host)
-        host.observe(pages, viewLifecycle, TopBehaviour)
+        host.observe(pages, viewLifecycle, ForwardBackwardTransition)
         pages.observe(viewLifecycle) {
-            Log.d("TABDEB", "observe")
             val newId = findMenuId(it.items[it.selectedIndex].configuration)
             menuItems.forEach { item ->
                 view.findViewById<ImageView>(item).isSelected = item ==  newId
@@ -66,7 +65,6 @@ class TabScreen(context: ScreenContext, type: TabScreenParams): ViewScreen<TabSc
 
     private fun navigate(screen: ScreenParams) {
         node.findHolder(NavigationType.PAGES.name)!!.navigator.open(screen) { _, _ ->
-            Log.d("TABDEB", "open")
         }
     }
 }

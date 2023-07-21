@@ -23,9 +23,7 @@ class MainActivity : AppCompatActivity() {
         registerFeedScreens(register)
         registerVideoScreens(register)
         registerTreeScreens(register)
-//        registerPlayerScreens(register)
         registerSearchScreens(register)
-//        registerSettingsScreens(register)
         registerMainScreens(register)
 
         val router = Router(register)
@@ -41,6 +39,5 @@ class MainActivity : AppCompatActivity() {
         setContentView(view)
         mainScreen.onViewCreated(view)
     }
-
 
 }

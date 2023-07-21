@@ -10,6 +10,7 @@ import com.example.navigation.screens.ScreenFactory
 import com.example.navigation.screens.ViewScreen
 import com.example.navigation.stack.StackHostView
 import com.example.navigation.stack.stack
+import com.example.navigation.view.ForwardBackwardTransition
 
 class SearchScreen(context: ScreenContext, type: SearchScreenParams): ViewScreen<SearchScreenParams>(context, type) {
 
@@ -21,7 +22,7 @@ class SearchScreen(context: ScreenContext, type: SearchScreenParams): ViewScreen
 
     override fun onViewCreated(view: View) {
         val routerView: StackHostView = view.findViewById(R.id.host)
-        routerView.observe(stack, viewLifecycle)
+        routerView.observe(stack, viewLifecycle, ForwardBackwardTransition)
     }
 }
 

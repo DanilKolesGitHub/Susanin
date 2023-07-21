@@ -3,9 +3,6 @@ package com.example.susanin
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.router.children.children
 import com.example.navigation.*
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.router.ScreenRegister
@@ -16,8 +13,8 @@ import com.example.navigation.slot.SlotHostView
 import com.example.navigation.slot.slot
 import com.example.navigation.stack.StackHostView
 import com.example.navigation.stack.stack
-import com.example.navigation.view.ForwardBackwardBehaviour
-import com.example.navigation.view.UpBottomBehaviour
+import com.example.navigation.view.BottomUpTransition
+import com.example.navigation.view.ForwardBackwardTransition
 
 class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, MainScreenParams) {
 
@@ -25,13 +22,17 @@ class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, 
         TabScreenParams
     )
 
+    val slot = slot(DialogScreenParams("hello"))
+
     override fun onCreateView(layoutInflater: LayoutInflater, parent: ViewGroup): View {
         return layoutInflater.inflate(R.layout.activity_main, parent, false)
     }
 
     override fun onViewCreated(view: View) {
         val routerView: StackHostView = view.findViewById(R.id.router)
-        routerView.observe(stack, lifecycle, animationBehaviour = ForwardBackwardBehaviour)
+        routerView.observe(stack, lifecycle, transitionProvider = ForwardBackwardTransition)
+        val slotView: SlotHostView = view.findViewById(R.id.slot)
+        slotView.observe(slot, lifecycle, transitionProvider = BottomUpTransition)
 //        val button: Button = view.findViewById(R.id.clear_button)
 //        button.setOnClickListener {
 //            navigate()

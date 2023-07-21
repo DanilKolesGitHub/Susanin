@@ -12,7 +12,7 @@ import com.example.navigation.screens.Screen
 import com.example.navigation.screens.ScreenParams
 
 fun ScreenContext.slot(
-    initial: ScreenParams?,
+    initial: ScreenParams? = null,
     handleBackButton: Boolean = true,
     tag: String = NavigationType.SLOT.name,
 ) = slot (

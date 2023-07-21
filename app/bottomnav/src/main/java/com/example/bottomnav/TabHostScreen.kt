@@ -8,6 +8,7 @@ import com.example.navigation.screens.ScreenParams
 import com.example.navigation.screens.ViewScreen
 import com.example.navigation.stack.StackHostView
 import com.example.navigation.stack.stack
+import com.example.navigation.view.ForwardBackwardTransition
 
 abstract class TabHostScreen<P: ScreenParams>(context: ScreenContext, type: P): ViewScreen<P>(context, type) {
 
@@ -21,6 +22,6 @@ abstract class TabHostScreen<P: ScreenParams>(context: ScreenContext, type: P): 
 
     override fun onViewCreated(view: View) {
         val host: StackHostView = view.findViewById(R.id.tab_host)
-        host.observe(stack, viewLifecycle)
+        host.observe(stack, viewLifecycle, ForwardBackwardTransition)
     }
 }

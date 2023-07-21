@@ -1,9 +1,10 @@
 package com.example.navigation
 
+import androidx.transition.Transition
 import com.example.navigation.screens.ScreenParams
-import com.example.navigation.view.AnimationBehaviour
-import com.example.navigation.view.AnimationProvider
-import com.example.navigation.view.UpBottomBehaviour
+import com.example.navigation.view.ForwardBackwardTransition
+import com.example.navigation.view.TopTransition
+import com.example.navigation.view.TransitionProvider
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
@@ -13,7 +14,10 @@ object MainScreenParams: ScreenParams
 object TabScreenParams: ScreenParams
 
 @Parcelize
-object FeedTabScreenParams: ScreenParams
+object FeedTabScreenParams: ScreenParams, TransitionProvider {
+    override val transition: Transition
+        get() = TopTransition.transition
+}
 
 @Parcelize
 object VideoTabScreenParams: ScreenParams
@@ -40,9 +44,10 @@ object SearchScreenParams: ScreenParams
 object InputScreenParams: ScreenParams
 
 @Parcelize
-data class ResultScreenParams(val result: String): ScreenParams, AnimationProvider{
-    override val animationBehaviour: AnimationBehaviour = UpBottomBehaviour
-}
+data class ResultScreenParams(val result: String): ScreenParams
+
+@Parcelize
+data class DialogScreenParams(val result: String): ScreenParams
 
 @Parcelize
 class SettingsScreenParams(): ScreenParams
