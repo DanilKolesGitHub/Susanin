@@ -21,8 +21,8 @@ import com.example.navigation.view.UpBottomBehaviour
 
 class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, MainScreenParams) {
 
-    val slot = slot(
-        SearchScreenParams
+    val stack = stack(
+        TabScreenParams
     )
 
     override fun onCreateView(layoutInflater: LayoutInflater, parent: ViewGroup): View {
@@ -30,12 +30,12 @@ class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, 
     }
 
     override fun onViewCreated(view: View) {
-        val routerView: SlotHostView = view.findViewById(R.id.router)
-        routerView.observe(slot, lifecycle, animationBehaviour = ForwardBackwardBehaviour)
-        val button: Button = view.findViewById(R.id.clear_button)
-        button.setOnClickListener {
-            navigate()
-        }
+        val routerView: StackHostView = view.findViewById(R.id.router)
+        routerView.observe(stack, lifecycle, animationBehaviour = ForwardBackwardBehaviour)
+//        val button: Button = view.findViewById(R.id.clear_button)
+//        button.setOnClickListener {
+//            navigate()
+//        }
     }
 
 

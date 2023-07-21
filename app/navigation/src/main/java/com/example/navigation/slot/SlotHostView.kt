@@ -31,11 +31,11 @@ class SlotHostView @JvmOverloads constructor(
     fun <C : Any, T : ViewRender> observe(
         slot: Value<ChildSlot<C, T>>,
         hostViewLifecycle: Lifecycle, // view lifecycle
-        mode: ObserveLifecycleMode = ObserveLifecycleMode.RESUME_PAUSE,
         animationBehaviour: AnimationBehaviour? = null,
     ) {
         this.animationBehaviour = animationBehaviour
-        slot.observe(hostViewLifecycle, mode) {
+        hostViewLifecycle.doOnDestroy { animator?.end() }
+        slot.observe(hostViewLifecycle) {
             onSlotChanged(it, hostViewLifecycle)
         }
     }
@@ -144,6 +144,7 @@ class SlotHostView @JvmOverloads constructor(
     ): ChangeType {
 
         override fun animator(parent: ViewGroup): Animator? {
+            child.view.bringToFront()
             return child.animationBehaviour?.close(child.view, parent, parent)
         }
     }
@@ -159,6 +160,7 @@ class SlotHostView @JvmOverloads constructor(
     ): ChangeType {
 
         override fun animator(parent: ViewGroup): Animator? {
+            closeChild.view.bringToFront()
             val closeAnimator = closeChild.animationBehaviour?.close(closeChild.view, parent, parent)
             val openAnimator = openChild.animationBehaviour?.open(parent, openChild.view, parent)
             if  (openAnimator != null) {

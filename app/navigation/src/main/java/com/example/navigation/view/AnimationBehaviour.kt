@@ -22,7 +22,6 @@ object ForwardBackwardBehaviour: AnimationBehaviour {
     }
 
     override fun close(from: View, to: View, parent: ViewGroup): Animator {
-        from.bringToFront()
         return ObjectAnimator.ofFloat(from, View.TRANSLATION_X, 0f, parent.width.toFloat()).apply {
             duration = 1000
         }
@@ -39,8 +38,23 @@ object UpBottomBehaviour: AnimationBehaviour {
     }
 
     override fun close(from: View, to: View, parent: ViewGroup): Animator {
-        from.bringToFront()
         return ObjectAnimator.ofFloat(from, View.TRANSLATION_Y, 0f, parent.height.toFloat()).apply {
+            duration = 1000
+        }
+    }
+}
+
+@Parcelize
+object TopBehaviour: AnimationBehaviour {
+
+    override fun open(from: View, to: View, parent: ViewGroup): Animator {
+        return ObjectAnimator.ofFloat(to, View.ALPHA, 0f, 1f).apply {
+            duration = 1000
+        }
+    }
+
+    override fun close(from: View, to: View, parent: ViewGroup): Animator {
+        return ObjectAnimator.ofFloat(from, View.ALPHA, 1f, 0f).apply {
             duration = 1000
         }
     }

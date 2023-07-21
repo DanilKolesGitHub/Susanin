@@ -10,16 +10,25 @@ import kotlinx.android.parcel.Parcelize
 object MainScreenParams: ScreenParams
 
 @Parcelize
-class TabScreenParams(): ScreenParams
+object TabScreenParams: ScreenParams
 
 @Parcelize
-class FeedScreenParams(): ScreenParams
+object FeedTabScreenParams: ScreenParams
 
 @Parcelize
-class VideoScreenParams(): ScreenParams
+object VideoTabScreenParams: ScreenParams
 
 @Parcelize
-class TreeScreenParams(): ScreenParams
+object TreeTabScreenParams: ScreenParams
+
+@Parcelize
+object FeedScreenParams: ScreenParams
+
+@Parcelize
+object VideoScreenParams: ScreenParams
+
+@Parcelize
+object TreeScreenParams: ScreenParams
 
 @Parcelize
 class PlayerScreenParams(): ScreenParams

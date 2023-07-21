@@ -1,84 +1,110 @@
 package com.example.bottomnav
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.router.stack.bringToFront
+import android.widget.ImageView
 import com.arkivanov.decompose.value.observe
 import com.example.navigation.*
-//import com.example.navigation.router.Router.stack
-//import com.example.navigation.router.Router.navigator
-//import com.example.navigation.router.Behaviour
-//import com.example.navigation.router.TabBehaviour
-//import com.example.navigation.screens.ScreenFactory
-//import com.example.navigation.screens.ScreenParams
-//import com.google.android.material.bottomnavigation.BottomNavigationView
-//
-//class TabScreen(context: ComponentContext, type: TabScreenParams): HostScreen<TabScreenParams>(context, type) {
-//
-//    val navigator = navigator()
-//
-//    val bottomMap = hashMapOf(
-//        R.id.feed to FeedScreenParams(),
-//        R.id.video to VideoScreenParams(),
-//        R.id.tree to TreeScreenParams(),
-//    )
-//
-//    val stack = stack(bottomMap[R.id.feed]!!)
-//
-//    override fun onCreateView(
-//        inflater: LayoutInflater,
-//        container: ViewGroup,
-//        params: ScreenParams?
-//    ): View {
-//        return inflater.inflate(R.layout.bottom_nav_layout, container, false).also { init(it) }
-//    }
-//
-//    private fun init(container: View) {
-//        val routerView: StackView = container.findViewById(R.id.host)
-//        val bottom = container.findViewById<BottomNavigationView>(R.id.bottom)
-//        routerView.observeStack(stack, lifecycle)
-//        stack.observe(lifecycle) {
-//            val newId = findMenuId(it.active.configuration)
-//            if (newId != bottom.selectedItemId)
-//                bottom.selectedItemId = newId
-//        }
-//        bottom.setOnItemSelectedListener {
-//            val screen = bottomMap[it.itemId]!!
-//            navigator.bringToFront(screen)
-//            return@setOnItemSelectedListener true
-//        }
-//    }
-//
-//    private fun findMenuId(active: ScreenParams): Int {
-//        bottomMap.forEach {
-//            if (active::class == it.value::class)
-//                return it.key
-//        }
-//        throw IllegalStateException()
-//    }
-//}
-//
-//fun registerBottomScreens(register: ScreenRegister) {
-//    register.registerHostScreen(
-//        TabScreenParams(),
-//        object : NavigatorFactory {
-//            override fun create(): Behaviour {
-//                return TabBehaviour()
-//            }
-//        },
-//        FeedScreenParams::class,
-//        VideoScreenParams::class,
-//        TreeScreenParams::class,
-//    )
-//
-//    register.registerScreen(
-//        TabScreenParams::class,
-//        object : ScreenFactory<TabScreenParams> {
-//            override fun create(context: ComponentContext, screenType: TabScreenParams): TabScreen {
-//                return TabScreen(context, screenType)
-//            }
-//        }
-//    )
-//}
+import com.example.navigation.context.ScreenContext
+import com.example.navigation.pages.PagesHostView
+import com.example.navigation.pages.pages
+import com.example.navigation.router.ScreenRegister
+import com.example.navigation.screens.ScreenFactory
+import com.example.navigation.screens.ScreenParams
+import com.example.navigation.screens.ViewScreen
+import com.example.navigation.view.TopBehaviour
+
+class TabScreen(context: ScreenContext, type: TabScreenParams): ViewScreen<TabScreenParams>(context, type) {
+
+    private val screens = listOf(FeedTabScreenParams, VideoTabScreenParams, TreeTabScreenParams)
+    private val menuItems = listOf(R.id.feed_item, R.id.video_item, R.id.tree_item)
+
+    private val pages = pages(screens, 0)
+
+    private fun findMenuId(active: ScreenParams): Int {
+        return when(active) {
+            FeedTabScreenParams -> R.id.feed_item
+            VideoTabScreenParams -> R.id.video_item
+            TreeTabScreenParams -> R.id.tree_item
+            else -> throw IllegalStateException()
+        }
+    }
+
+    private fun findScreenParam(id: Int): ScreenParams {
+        return when(id) {
+            R.id.feed_item -> FeedTabScreenParams
+            R.id.video_item -> VideoTabScreenParams
+            R.id.tree_item -> TreeTabScreenParams
+            else -> throw IllegalStateException()
+        }
+    }
+
+    override fun onCreateView(layoutInflater: LayoutInflater, parent: ViewGroup): View {
+        return layoutInflater.inflate(R.layout.bottom_nav_layout, parent, false)
+    }
+
+    override fun onViewCreated(view: View) {
+        val host: PagesHostView = view.findViewById(R.id.host)
+        host.observe(pages, viewLifecycle, TopBehaviour)
+        pages.observe(viewLifecycle) {
+            Log.d("TABDEB", "observe")
+            val newId = findMenuId(it.items[it.selectedIndex].configuration)
+            menuItems.forEach { item ->
+                view.findViewById<ImageView>(item).isSelected = item ==  newId
+            }
+        }
+        menuItems.forEach { item ->
+            view.findViewById<ImageView>(item).setOnClickListener {
+                menuItems.forEach { item -> view.findViewById<ImageView>(item).isSelected = false }
+                it.isSelected = true
+                navigate(findScreenParam(item))
+            }
+        }
+    }
+
+    private fun navigate(screen: ScreenParams) {
+        node.findHolder(NavigationType.PAGES.name)!!.navigator.open(screen) { _, _ ->
+            Log.d("TABDEB", "open")
+        }
+    }
+}
+
+fun registerTabScreens(register: ScreenRegister) {
+    register.registerFactory(
+        TabScreenParams::class,
+        object : ScreenFactory<TabScreenParams> {
+            override fun create(screenType: TabScreenParams, context: ScreenContext): TabScreen {
+                return TabScreen(context, screenType)
+            }
+        }
+    )
+
+    register.registerFactory(
+        FeedTabScreenParams::class,
+        object : ScreenFactory<FeedTabScreenParams> {
+            override fun create(screenType: FeedTabScreenParams, context: ScreenContext): FeedTabScreen {
+                return FeedTabScreen(context, screenType)
+            }
+        }
+    )
+
+    register.registerFactory(
+        VideoTabScreenParams::class,
+        object : ScreenFactory<VideoTabScreenParams> {
+            override fun create(screenType: VideoTabScreenParams, context: ScreenContext): VideoTabScreen {
+                return VideoTabScreen(context, screenType)
+            }
+        }
+    )
+
+    register.registerFactory(
+        TreeTabScreenParams::class,
+        object : ScreenFactory<TreeTabScreenParams> {
+            override fun create(screenType: TreeTabScreenParams, context: ScreenContext): TreeTabScreen {
+                return TreeTabScreen(context, screenType)
+            }
+        }
+    )
+}

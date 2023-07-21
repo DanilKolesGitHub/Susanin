@@ -9,7 +9,7 @@ import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 internal data class SlotHostState(
-    val slot: ScreenParams?
+    internal val slot: ScreenParams?
 ): HostState, Parcelable {
 
     override val children: List<ChildState> =

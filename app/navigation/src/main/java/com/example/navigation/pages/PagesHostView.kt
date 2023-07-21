@@ -1,4 +1,4 @@
-package com.example.navigation.stack
+package com.example.navigation.pages
 
 import android.content.Context
 import android.util.AttributeSet
@@ -6,7 +6,9 @@ import android.util.SparseArray
 import androidx.core.animation.addListener
 import androidx.core.util.forEach
 import androidx.core.util.putAll
-import com.arkivanov.decompose.router.stack.ChildStack
+import com.arkivanov.decompose.Child
+import com.arkivanov.decompose.ExperimentalDecomposeApi
+import com.arkivanov.decompose.router.pages.ChildPages
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.observe
 import com.arkivanov.essenty.lifecycle.*
@@ -14,97 +16,86 @@ import com.example.navigation.view.AnimationBehaviour
 import com.example.navigation.view.HostView
 import com.example.navigation.view.ViewRender
 
-class StackHostView @JvmOverloads constructor(
+@OptIn(ExperimentalDecomposeApi::class)
+class PagesHostView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : HostView(context, attrs, defStyleAttr) {
 
-    private var currentStack: ChildStack<*, *>? = null
+    private var currentPages: ChildPages<*, *>? = null
 
     fun <C : Any, T : ViewRender> observe(
-        stack: Value<ChildStack<C, T>>,
+        pages: Value<ChildPages<C, T>>,
         hostViewLifecycle: Lifecycle, // view lifecycle
         animationBehaviour: AnimationBehaviour? = null,
     ) {
         this.animationBehaviour = animationBehaviour
         hostViewLifecycle.doOnDestroy { animator?.end() }
-        stack.observe(hostViewLifecycle) {
-            onStackChanged(it, hostViewLifecycle)
+        pages.observe(hostViewLifecycle) {
+            onPagesChanged(it, hostViewLifecycle)
         }
     }
 
-    private fun <C : Any, T : ViewRender> onStackChanged(
-        stack: ChildStack<C, T>,
+    private fun <C : Any, T : ViewRender> onPagesChanged(
+        pages: ChildPages<C, T>,
         hostViewLifecycle: Lifecycle,
     ) {
         animator?.end()
         @Suppress("UNCHECKED_CAST")
-        val currentStack = currentStack as ChildStack<C, T>?
+        val currentPages = currentPages as ChildPages<C, T>?
 
         @Suppress("UNCHECKED_CAST")
         val currentChild = currentChild as ActiveChild<C, T>?
 
-        if (currentChild?.child?.configuration != stack.active.configuration) {
+        val selectedChild = pages.items[pages.selectedIndex] as Child.Created<C, T>
 
-            val activeChild = createActiveChild(hostViewLifecycle, stack.active)
+        if (currentChild?.child?.configuration != selectedChild.configuration) {
+
+            val activeChild = createActiveChild(hostViewLifecycle, selectedChild)
             this.addView(activeChild.view)
 
-            if (isInBackStack(stack, currentChild)) {
+            if (isInPages(pages, currentChild)) {
                 addActiveToInactive(currentChild)
             }
-            validateInactive(stack)
-            // Новый экран был в стеке, поэтому проигрываем анимацию в обратную сторону.
-            val activeFromStack = isInBackStack(currentStack, activeChild)
-            val animation = hasAnimation(currentChild, activeChild, activeFromStack)
+            validateInactive(pages)
+            val animation = hasAnimation(currentChild, activeChild)
             // Нужно анимировать если уже есть view и указана анимация
             if (animation != null && currentChild != null) {
-                animateChange(currentChild, activeChild, activeFromStack, animation) {
-                    switchCurrent(currentChild, activeChild, stack)
+                animateChange(currentChild, activeChild, animation) {
+                    switchCurrent(currentChild, activeChild, pages)
                 }
             } else {
-                switchCurrent(currentChild, activeChild, stack)
+                switchCurrent(currentChild, activeChild, pages)
             }
         } else {
-            validateInactive(stack)
+            validateInactive(pages)
         }
     }
 
-    private fun switchCurrent(current: ActiveChild<*, *>?, active: ActiveChild<*, *>, stack: ChildStack<*, *>) {
+    private fun switchCurrent(current: ActiveChild<*, *>?, active: ActiveChild<*, *>, pages: ChildPages<*, *>) {
         current?.lifecycle?.destroy()
         active.lifecycle.resume()
         this.removeView(currentChild?.view)
         this.currentChild = active
-        this.currentStack = stack
+        this.currentPages = pages
     }
 
     private fun hasAnimation(
         current: ActiveChild<*, *>?,
         active: ActiveChild<*, *>,
-        reverse: Boolean,
     ): AnimationBehaviour?{
         if (current == null) return null
-        return if (reverse) {
-            current.animationBehaviour
-        } else {
-            active.animationBehaviour
-        }
+        return active.animationBehaviour
     }
 
     private fun animateChange(
         current: ActiveChild<*, *>,
         active: ActiveChild<*, *>,
-        reverse: Boolean,
         animation: AnimationBehaviour,
         onEnd: () -> Unit
     ) {
-        animator = if (reverse) {
-            current.view.bringToFront()
-            animation.close(current.view, active.view, this)
-        } else {
-            animation.open(current.view, active.view, this)
-        }
-
+        animator = animation.open(current.view, active.view, this)
         animator?.addListener(
             onStart = {
                 active.lifecycle.start()
@@ -118,16 +109,18 @@ class StackHostView @JvmOverloads constructor(
         animator?.start()
     }
 
-    private fun isInBackStack(stack: ChildStack<*, *>?, child: ActiveChild<*, *>?): Boolean{
-        return stack != null &&
+    private fun isInPages(pages: ChildPages<*, *>?, child: ActiveChild<*, *>?): Boolean{
+        return pages != null &&
                 child != null &&
-                stack.backStack.any { it.configuration == child.child.configuration }
+                pages.items.any { it.configuration == child.child.configuration }
     }
 
     // Синхронизируем не активные элемнеты с backstack.
-    private fun validateInactive(stack: ChildStack<*, *>) {
+    private fun validateInactive(pages: ChildPages<*, *>) {
         val validChild = SparseArray<InactiveChild>()
-        val validKeys = stack.backStack.asSequence().map { it.getKey() }.toSet()
+        val validKeys = pages.items.asSequence().mapIndexedNotNull { index, child ->
+            if (index != pages.selectedIndex) child.getKey() else null
+        }.toSet()
         inactiveChildren.forEach { key, child ->
             if (key in validKeys){
                 validChild.put(key, child)

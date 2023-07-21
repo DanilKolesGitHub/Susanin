@@ -7,11 +7,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:text="Clear"
-        android:id="@+id/clear_button"/>
+<!--    <Button-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="50dp"-->
+<!--        android:text="Clear"-->
+<!--        android:id="@+id/clear_button"/>-->
 
 <!--    <TextView-->
 <!--        android:textColor="@color/black"-->
@@ -22,7 +22,7 @@
 <!--        android:layout_height="wrap_content"-->
 <!--        android:textSize="50sp"/>-->
 
-    <com.example.navigation.slot.SlotHostView
+    <com.example.navigation.stack.StackHostView
         android:id="@+id/router"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
