@@ -3,9 +3,12 @@ package com.example.navigation.view
 import android.content.Context
 import android.os.Parcelable
 import android.util.AttributeSet
+import android.util.Log
 import android.util.SparseArray
 import android.view.View
 import androidx.core.util.putAll
+import androidx.core.view.ViewCompat
+import androidx.core.view.doOnPreDraw
 import androidx.transition.Transition
 import androidx.transition.TransitionManager
 import com.arkivanov.decompose.Child
@@ -53,6 +56,7 @@ open class HostView @JvmOverloads constructor(
     protected fun addActiveToInactive(
         child: ActiveChild<*, *>?,
     ) {
+        Log.d("SAVEDEB", child?.child?.configuration.toString())
         //  Сохраняем состояние текущего экрана.
         if (child?.view == null) return
         inactiveChildren[child.key] = InactiveChild(
@@ -69,13 +73,25 @@ open class HostView @JvmOverloads constructor(
         transition: Transition?,
         onStart: () -> Unit,
         onEnd: () -> Unit,
+        changes: () -> Unit,
     ) {
         if (transition == null) {
+            changes.invoke()
             onEnd()
             return
         }
         transition.addCallbacks(onStart = { onStart() }, onEnd = { onEnd() })
-        TransitionManager.beginDelayedTransition(this, transition)
+        // beginDelayedTransition работает только если sceneRoot.isLaidOut() == true
+        if (ViewCompat.isLaidOut(this)) {
+            TransitionManager.beginDelayedTransition(this, transition)
+            changes.invoke()
+        } else {
+            // doOnLayout вызывается до присваивания isLaidOut = true, поэтому не работает
+            doOnPreDraw {
+                TransitionManager.beginDelayedTransition(this, transition)
+                changes.invoke()
+            }
+        }
     }
 
     @OptIn(InternalDecomposeApi::class)

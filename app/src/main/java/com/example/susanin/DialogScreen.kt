@@ -8,7 +8,6 @@ import android.widget.EditText
 import android.widget.TextView
 import com.example.navigation.DialogScreenParams
 import com.example.navigation.NavigationType
-import com.example.navigation.ResultScreenParams
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.screens.ViewScreen
 import com.example.search.R
@@ -19,7 +18,7 @@ class DialogScreen(context: ScreenContext, type: DialogScreenParams): ViewScreen
         inflater: LayoutInflater,
         container: ViewGroup,
     ): View {
-        return inflater.inflate(R.layout.input_layout, container, false)
+        return inflater.inflate(com.example.susanin.R.layout.dialog_layout, container, false)
     }
 
     override fun onViewCreated(container: View) {

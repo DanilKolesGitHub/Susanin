@@ -1,9 +1,12 @@
 package com.example.susanin
 
 import android.os.Bundle
+import android.os.PersistableBundle
+import android.util.Log
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import com.arkivanov.decompose.defaultComponentContext
+import com.arkivanov.essenty.lifecycle.*
 import com.example.bottomnav.registerTabScreens
 import com.example.feed.registerFeedScreens
 import com.example.navigation.MainScreenParams
@@ -16,6 +19,10 @@ import com.example.tree.registerTreeScreens
 import com.example.video.registerVideoScreens
 
 class MainActivity : AppCompatActivity() {
+
+    val viewLifecycle: LifecycleRegistry = LifecycleRegistry()
+    var restored = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val register = ScreenRegister()
@@ -35,9 +42,43 @@ class MainActivity : AppCompatActivity() {
                 rootNode,
             )
         )
-        val view = mainScreen.onCreateView(layoutInflater, window.decorView as ViewGroup)
+        val view = mainScreen.createView(window.decorView as ViewGroup, mainScreen.lifecycle)
         setContentView(view)
-        mainScreen.onViewCreated(view)
+        viewLifecycle.create()
+        restored = savedInstanceState != null
     }
 
+    override fun onStart() {
+        super.onStart()
+        Log.d("SLDEB", "onStart")
+        if (!restored)
+            viewLifecycle.start()
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        Log.d("SLDEB", "restore")
+        if (restored)
+            viewLifecycle.start()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewLifecycle.resume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewLifecycle.pause()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
+        super.onSaveInstanceState(outState, outPersistentState)
+        viewLifecycle.stop()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        viewLifecycle.destroy()
+    }
 }

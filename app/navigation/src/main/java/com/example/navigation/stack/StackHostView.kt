@@ -3,7 +3,6 @@ package com.example.navigation.stack
 import android.content.Context
 import android.util.AttributeSet
 import android.util.SparseArray
-import androidx.core.animation.addListener
 import androidx.core.util.forEach
 import androidx.core.util.putAll
 import androidx.transition.Transition
@@ -89,10 +88,12 @@ class StackHostView @JvmOverloads constructor(
                         activeChild.lifecycle.resume()
                         this.currentChild = activeChild
                         this.currentStack = stack
+                    },
+                    changes = {
+                        removeView(currentChild.view)
+                        addView(activeChild.view)
                     }
                 )
-                removeView(currentChild.view)
-                addView(activeChild.view)
             }
         }
         validateInactive(stack)

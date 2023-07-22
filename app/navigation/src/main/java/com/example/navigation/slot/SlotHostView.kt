@@ -1,15 +1,8 @@
 package com.example.navigation.slot
 
-import android.animation.Animator
-import android.animation.AnimatorSet
 import android.content.Context
-import android.os.Parcelable
 import android.util.AttributeSet
-import android.view.ViewGroup
-import androidx.core.animation.addListener
-import androidx.core.animation.doOnStart
 import androidx.transition.Transition
-import androidx.transition.TransitionManager
 import androidx.transition.TransitionSet
 import androidx.transition.TransitionSet.ORDERING_SEQUENTIAL
 import com.arkivanov.decompose.router.slot.ChildSlot
@@ -26,10 +19,6 @@ class SlotHostView @JvmOverloads constructor(
 ) : HostView(context, attrs, defStyleAttr) {
 
     private var currentSlot: ChildSlot<*, *>? = null
-    // В отличии от Stack и Pages анимирует открытие первого экрана.
-    // Поэтому чтобы не анимировать ранее открытый экран после восстанавления состояния,
-    // используется флаг.
-    private var afterRestore: Boolean = false
 
     /**
      * Подписывается на изменение ChildSlot<C, T> и отрисовывает View.
@@ -93,13 +82,14 @@ class SlotHostView @JvmOverloads constructor(
                     activeChild?.lifecycle?.resume()
                     this.currentChild = activeChild
                     this.currentSlot = slot
+                },
+                changes = {
+                    currentChild?.view?.let(::removeView)
+                    activeChild?.view?.let(::addView)
                 }
             )
-            currentChild?.view?.let(::removeView)
-            activeChild?.view?.let(::addView)
         }
         clearInactive()
-        afterRestore = false
     }
 
     /**
@@ -114,7 +104,6 @@ class SlotHostView @JvmOverloads constructor(
         current: ActiveChild<*, *>?,
         active: ActiveChild<*, *>?,
     ): Transition? {
-        if (afterRestore) return null
         val currentTransition = current?.let {
             it.transition?.addTarget(it.view)
         }
@@ -136,10 +125,5 @@ class SlotHostView @JvmOverloads constructor(
     private fun clearInactive() {
         // Удаляем сохранненные состояния.
         inactiveChildren.clear()
-    }
-
-    override fun onRestoreInstanceState(state: Parcelable?) {
-        afterRestore = state != null
-        super.onRestoreInstanceState(state)
     }
 }

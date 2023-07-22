@@ -1,6 +1,5 @@
 package com.example.bottomnav
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -46,7 +45,7 @@ class TabScreen(context: ScreenContext, type: TabScreenParams): ViewScreen<TabSc
     }
 
     override fun onViewCreated(view: View) {
-        val host: PagesHostView = view.findViewById(R.id.host)
+        val host: PagesHostView = view.findViewById(R.id.page_host)
         host.observe(pages, viewLifecycle, ForwardBackwardTransition)
         pages.observe(viewLifecycle) {
             val newId = findMenuId(it.items[it.selectedIndex].configuration)

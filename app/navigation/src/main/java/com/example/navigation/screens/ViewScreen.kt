@@ -4,10 +4,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.arkivanov.essenty.lifecycle.*
+import com.arkivanov.essenty.lifecycle.Lifecycle
+import com.arkivanov.essenty.lifecycle.doOnCreate
+import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.example.core.dagger.LifecycleLogger
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.view.ViewRender
 
 abstract class ViewScreen<P: ScreenParams>(context: ScreenContext, params: P):
     Screen<P>(context, params) {
@@ -15,7 +16,7 @@ abstract class ViewScreen<P: ScreenParams>(context: ScreenContext, params: P):
     private var _viewLifecycle: Lifecycle? = null
     protected val viewLifecycle: Lifecycle get() { return _viewLifecycle ?: throw IllegalLifecycleException(null) }
 
-    final override fun createView(parent: ViewGroup, viewLifecycle: Lifecycle): View {
+    override fun createView(parent: ViewGroup, viewLifecycle: Lifecycle): View {
         _viewLifecycle = viewLifecycle
         viewLifecycle.subscribe(LifecycleLogger("view ${params}", Log::d))
         val view = onCreateView(LayoutInflater.from(parent.context), parent)

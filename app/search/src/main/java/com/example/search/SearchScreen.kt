@@ -3,7 +3,9 @@ package com.example.search
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.example.navigation.*
+import com.example.navigation.InputScreenParams
+import com.example.navigation.ResultScreenParams
+import com.example.navigation.SearchScreenParams
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.router.ScreenRegister
 import com.example.navigation.screens.ScreenFactory
@@ -21,30 +23,12 @@ class SearchScreen(context: ScreenContext, type: SearchScreenParams): ViewScreen
     }
 
     override fun onViewCreated(view: View) {
-        val routerView: StackHostView = view.findViewById(R.id.host)
+        val routerView: StackHostView = view.findViewById(R.id.search_host)
         routerView.observe(stack, viewLifecycle, ForwardBackwardTransition)
     }
 }
 
 fun registerSearchScreens(register: ScreenRegister) {
-//    register.registerHostScreen(
-//        SearchScreenParams(),
-//        object : NavigatorFactory{
-//            override fun create(): Behaviour {
-//                return StackBehaviour()
-//            }
-//        },
-//        InputScreenParams::class,
-//        ResultScreenParams::class,
-//    )
-//    register.registerScreen(
-//        SearchScreenParams::class,
-//        object : ScreenFactory<SearchScreenParams> {
-//            override fun create(context: ComponentContext, screenType: SearchScreenParams): SearchScreen {
-//                return SearchScreen(context, screenType)
-//            }
-//        }
-//    )
 
     register.registerFactory(SearchScreenParams::class, object : ScreenFactory<SearchScreenParams> {
         override fun create(screenType: SearchScreenParams, context: ScreenContext): SearchScreen {
