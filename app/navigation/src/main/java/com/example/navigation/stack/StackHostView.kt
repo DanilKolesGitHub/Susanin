@@ -2,9 +2,6 @@ package com.example.navigation.stack
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.SparseArray
-import androidx.core.util.forEach
-import androidx.core.util.putAll
 import androidx.transition.Transition
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.ObserveLifecycleMode
@@ -133,21 +130,15 @@ class StackHostView @JvmOverloads constructor(
     }
 
     /**
-     * Удаляет все ранее сохраненные состаяния эранов, если они больше не находятся в pages.
+     * Удаляет все ранее сохраненные состаяния эранов, если они больше не находятся в stack.
      *
      * @param stack Новый ChildStack
      */
     private fun validateInactive(stack: ChildStack<*, *>) {
-        val validChild = SparseArray<InactiveChild>()
         // Собираем все key из нового stack. Берем только не активные экраны.
-        val validKeys = stack.backStack.asSequence().map { it.getKey() }.toSet()
+        val validKeys = stack.backStack.toMutableSet()
+        validKeys.add(stack.active)
         // Сохраняем в inactiveChildren только те, которые находятся в новом stack.
-        inactiveChildren.forEach { key, child ->
-            if (key in validKeys){
-                validChild.put(key, child)
-            }
-        }
-        inactiveChildren.clear()
-        inactiveChildren.putAll(validChild)
+        validateInactive(validKeys)
     }
 }

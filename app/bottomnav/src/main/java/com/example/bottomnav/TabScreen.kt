@@ -45,7 +45,7 @@ class TabScreen(context: ScreenContext, type: TabScreenParams): ViewScreen<TabSc
     }
 
     override fun onViewCreated(view: View) {
-        val host: PagesHostView = view.findViewById(R.id.page_host)
+        val host: PagesHostView = view.findViewById(R.id.tab_page_host)
         host.observe(pages, viewLifecycle, ForwardBackwardTransition)
         pages.observe(viewLifecycle) {
             val newId = findMenuId(it.items[it.selectedIndex].configuration)

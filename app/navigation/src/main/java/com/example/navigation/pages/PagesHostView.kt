@@ -2,9 +2,6 @@ package com.example.navigation.pages
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.SparseArray
-import androidx.core.util.forEach
-import androidx.core.util.putAll
 import androidx.transition.Transition
 import com.arkivanov.decompose.Child
 import com.arkivanov.decompose.ExperimentalDecomposeApi
@@ -142,21 +139,7 @@ class PagesHostView @JvmOverloads constructor(
      * @param pages Новый ChildPages
      */
     private fun validateInactive(pages: ChildPages<*, *>) {
-        // Собираем все key из нового pages. Берем только не активные экраны.
-        val validKeys = pages.items.asSequence().mapIndexedNotNull { index, child ->
-            if (index != pages.selectedIndex)
-                child.getKey()
-            else
-                null
-        }.toSet()
-        val validChild = SparseArray<InactiveChild>()
         // Сохраняем в inactiveChildren только те, которые находятся в новом pages.
-        inactiveChildren.forEach { key, child ->
-            if (key in validKeys){
-                validChild.put(key, child)
-            }
-        }
-        inactiveChildren.clear()
-        inactiveChildren.putAll(validChild)
+        validateInactive(pages.items)
     }
 }

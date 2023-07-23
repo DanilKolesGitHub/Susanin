@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/input_screen"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <EditText
@@ -10,17 +11,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:textColor="#000000"
-        android:id="@+id/input"
+        android:id="@+id/search_input"
         android:layout_width="match_parent"
         android:layout_height="48dp"/>
 
 
     <Button
         android:text="Result"
-        app:layout_constraintTop_toBottomOf="@id/input"
+        app:layout_constraintTop_toBottomOf="@id/search_input"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:id="@+id/result"
+        android:id="@+id/result_button"
         android:layout_width="match_parent"
         android:layout_height="48dp"/>
 

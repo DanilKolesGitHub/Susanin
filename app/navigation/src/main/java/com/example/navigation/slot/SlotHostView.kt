@@ -89,7 +89,7 @@ class SlotHostView @JvmOverloads constructor(
                 }
             )
         }
-        clearInactive()
+        validateInactive(slot)
     }
 
     /**
@@ -122,8 +122,13 @@ class SlotHostView @JvmOverloads constructor(
         }
     }
 
-    private fun clearInactive() {
-        // Удаляем сохранненные состояния.
-        inactiveChildren.clear()
+
+    /**
+     * Удаляет все ранее сохраненные состаяния эранов, если они больше не находятся в slot.
+     *
+     * @param slot Новый ChildSlot
+     */
+    private fun validateInactive(slot: ChildSlot<*, *>) {
+        validateInactive(if (slot.child != null) setOf(slot.child!!) else setOf())
     }
 }

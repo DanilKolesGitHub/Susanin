@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
+    android:id="@+id/main_screen"
     android:background="@color/white"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -21,7 +22,7 @@
 <!--        android:textSize="50sp"/>-->
 
     <com.example.navigation.stack.StackHostView
-        android:id="@+id/router"
+        android:id="@+id/stack"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 

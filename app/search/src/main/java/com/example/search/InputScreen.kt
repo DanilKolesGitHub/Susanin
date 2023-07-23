@@ -21,8 +21,8 @@ class InputScreen(context: ScreenContext, type: InputScreenParams): ViewScreen<I
     }
 
     override fun onViewCreated(container: View) {
-        val input: EditText = container.findViewById(R.id.input)
-        val result: Button = container.findViewById(R.id.result)
+        val input: EditText = container.findViewById(R.id.search_input)
+        val result: Button = container.findViewById(R.id.result_button)
 
         result.setOnClickListener {
             navigate(ResultScreenParams(input.text.toString()))

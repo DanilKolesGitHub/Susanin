@@ -10,7 +10,6 @@ import com.example.navigation.DialogScreenParams
 import com.example.navigation.NavigationType
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.screens.ViewScreen
-import com.example.search.R
 
 class DialogScreen(context: ScreenContext, type: DialogScreenParams): ViewScreen<DialogScreenParams>(context, type) {
 
@@ -22,8 +21,8 @@ class DialogScreen(context: ScreenContext, type: DialogScreenParams): ViewScreen
     }
 
     override fun onViewCreated(container: View) {
-        val input: EditText = container.findViewById(R.id.input)
-        val result: Button = container.findViewById(R.id.result)
+        val input: EditText = container.findViewById(com.example.susanin.R.id.dialog_input)
+        val result: Button = container.findViewById(com.example.susanin.R.id.dialog_result)
         input.setText(params.result, TextView.BufferType.EDITABLE)
 
         result.setOnClickListener {

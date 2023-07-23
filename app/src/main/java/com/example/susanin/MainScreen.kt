@@ -32,7 +32,7 @@ class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, 
     }
 
     override fun onViewCreated(view: View) {
-        val routerView: StackHostView = view.findViewById(R.id.router)
+        val routerView: StackHostView = view.findViewById(R.id.stack)
         routerView.observe(stack, viewLifecycle, transitionProvider = ForwardBackwardTransition)
         val slotView: SlotHostView = view.findViewById(R.id.slot)
         slotView.observe(slot, viewLifecycle, transitionProvider = BottomUpTransition)
