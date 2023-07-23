@@ -7,8 +7,8 @@ import com.example.navigation.TreeScreenParams
 import com.example.navigation.TreeTabScreenParams
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.screens.ViewScreen
+import com.example.navigation.screens.stack
 import com.example.navigation.stack.StackHostView
-import com.example.navigation.stack.stack
 import com.example.navigation.view.ForwardBackwardTransition
 
 class TreeTabScreen(context: ScreenContext, params: TreeTabScreenParams): ViewScreen<TreeTabScreenParams>(context, params) {

@@ -7,10 +7,10 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import com.example.navigation.DialogScreenParams
-import com.example.navigation.NavigationType
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.screens.ScreenParams
+import com.example.navigation.navigation.transaction
 import com.example.navigation.screens.ViewScreen
+import com.example.navigation.slot.parentCloseSlot
 
 class DialogScreen(context: ScreenContext, type: DialogScreenParams): ViewScreen<DialogScreenParams>(context, type) {
 
@@ -18,12 +18,12 @@ class DialogScreen(context: ScreenContext, type: DialogScreenParams): ViewScreen
         inflater: LayoutInflater,
         container: ViewGroup,
     ): View {
-        return inflater.inflate(com.example.susanin.R.layout.dialog_layout, container, false)
+        return inflater.inflate(R.layout.dialog_layout, container, false)
     }
 
     override fun onViewCreated(container: View) {
-        val input: EditText = container.findViewById(com.example.susanin.R.id.dialog_input)
-        val result: Button = container.findViewById(com.example.susanin.R.id.dialog_result)
+        val input: EditText = container.findViewById(R.id.dialog_input)
+        val result: Button = container.findViewById(R.id.dialog_result)
         input.setText(params.result, TextView.BufferType.EDITABLE)
 
         result.setOnClickListener {
@@ -32,7 +32,9 @@ class DialogScreen(context: ScreenContext, type: DialogScreenParams): ViewScreen
     }
 
     private fun navigate(resultScreenParams: DialogScreenParams) {
-        navigation.parent!!.findHolder<ScreenParams>(NavigationType.SLOT.name)!!.navigator.open(resultScreenParams)
+        transaction {
+            parentCloseSlot(params)
+        }
     }
 
 }

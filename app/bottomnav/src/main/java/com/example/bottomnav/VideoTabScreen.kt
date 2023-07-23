@@ -7,8 +7,8 @@ import com.example.navigation.VideoScreenParams
 import com.example.navigation.VideoTabScreenParams
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.screens.ViewScreen
+import com.example.navigation.screens.stack
 import com.example.navigation.stack.StackHostView
-import com.example.navigation.stack.stack
 import com.example.navigation.view.ForwardBackwardTransition
 
 class VideoTabScreen(context: ScreenContext, params: VideoTabScreenParams): ViewScreen<VideoTabScreenParams>(context, params) {

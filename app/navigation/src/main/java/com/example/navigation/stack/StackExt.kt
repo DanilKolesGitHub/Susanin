@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
 import com.example.navigation.NavigationType
 import com.example.navigation.context.NavigationContext
+import com.example.navigation.navigation.TransactionBuilder
 import com.example.navigation.navigation.children
 
 fun <Params: Parcelable, Instance: Any> NavigationContext.stack(
@@ -54,3 +55,8 @@ fun <Params: Parcelable, Instance: Any> NavigationContext.stack(
         factory,
     )
 }
+
+fun <P: Any> TransactionBuilder.openStack(params: P) = open(params, NavigationType.STACK.name)
+fun <P: Any> TransactionBuilder.closeStack(params: P) = close(params, NavigationType.STACK.name)
+fun <P: Any> TransactionBuilder.parentOpenStack(params: P) = parentOpen(params, NavigationType.STACK.name)
+fun <P: Any> TransactionBuilder.parentCloseStack(params: P) = parentClose(params, NavigationType.STACK.name)

@@ -4,11 +4,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import com.example.navigation.*
+import com.example.navigation.FeedScreenParams
+import com.example.navigation.SearchScreenParams
 import com.example.navigation.context.ScreenContext
+import com.example.navigation.navigation.transaction
 import com.example.navigation.router.ScreenRegister
 import com.example.navigation.screens.ScreenFactory
 import com.example.navigation.screens.ViewScreen
+import com.example.navigation.stack.parentOpenStack
 
 class FeedScreen(context: ScreenContext, type: FeedScreenParams): ViewScreen<FeedScreenParams>(context, type) {
 
@@ -27,7 +30,7 @@ class FeedScreen(context: ScreenContext, type: FeedScreenParams): ViewScreen<Fee
     }
 
     private fun navigate() {
-        navigation.parent!!.findHolder(NavigationType.STACK.name)!!.navigator.open(SearchScreenParams)
+        transaction { parentOpenStack(SearchScreenParams) }
     }
 
 }

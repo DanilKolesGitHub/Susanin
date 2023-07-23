@@ -6,15 +6,16 @@ import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.Value
 import com.example.navigation.NavigationType
 import com.example.navigation.context.NavigationContext
+import com.example.navigation.navigation.TransactionBuilder
 import com.example.navigation.navigation.children
 
 fun <Params: Parcelable, Instance: Any> NavigationContext.slot(
-    initial: Params? = null,
+    initialSlot: Params? = null,
     handleBackButton: Boolean = true,
     tag: String = NavigationType.SLOT.name,
     factory: (params: Params, context: NavigationContext) -> Instance,
 ) = slot(
-    initialProvider = { initial },
+    initialProvider = { initialSlot },
     handleBackButton = handleBackButton,
     tag = tag,
     factory = factory
@@ -45,3 +46,9 @@ fun <Params: Parcelable, Instance: Any> NavigationContext.slot(
         factory
     )
 }
+
+fun <P: Any> TransactionBuilder.openSlot(params: P) = open(params, NavigationType.SLOT.name)
+fun <P: Any> TransactionBuilder.closeSlot(params: P) = close(params, NavigationType.SLOT.name)
+fun <P: Any> TransactionBuilder.parentOpenSlot(params: P) = parentOpen(params, NavigationType.SLOT.name)
+fun <P: Any> TransactionBuilder.parentCloseSlot(params: P) = parentClose(params, NavigationType.SLOT.name)
+

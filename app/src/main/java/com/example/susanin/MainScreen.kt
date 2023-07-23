@@ -9,13 +9,9 @@ import com.example.navigation.ResultScreenParams
 import com.example.navigation.TabScreenParams
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.router.ScreenRegister
-import com.example.navigation.screens.Screen
-import com.example.navigation.screens.ScreenFactory
-import com.example.navigation.screens.ViewScreen
+import com.example.navigation.screens.*
 import com.example.navigation.slot.SlotHostView
-import com.example.navigation.slot.slot
 import com.example.navigation.stack.StackHostView
-import com.example.navigation.stack.stack
 import com.example.navigation.view.BottomUpTransition
 import com.example.navigation.view.ForwardBackwardTransition
 

@@ -13,7 +13,7 @@ import com.arkivanov.essenty.parcelable.consumeRequired
 import com.example.navigation.context.DefaultNavigationContext
 import com.example.navigation.context.NavigationContext
 
-fun <Params: Any, State: NavState<Params>, Instance: Any, Ui: Any> NavigationContext.children(
+internal fun <Params: Any, State: NavState<Params>, Instance: Any, Ui: Any> NavigationContext.children(
     navigationHolder: NavigationHolder<Params, State>,
     handleBackButton: Boolean,
     tag: String,
@@ -39,13 +39,13 @@ fun <Params: Any, State: NavState<Params>, Instance: Any, Ui: Any> NavigationCon
         )
     }
     return children(
-        source = navigationHolder.navigator,
+        source = navigationHolder.navigation,
         key = tag,
         initialState = { navigationHolder.state },
         saveState = saveState,
         restoreState = restoreState,
         navTransformer = { state, event -> event.transformer(state) },
-        backTransformer = { if (handleBackButton) navigationHolder.navigator.back(it) else null },
+        backTransformer = { if (handleBackButton) navigationHolder.navigation.back(it) else null },
         onEventComplete = { event, newState, oldState -> event.onComplete(newState, oldState) },
         stateMapper = stateMapper,
         onStateChanged = { newState, oldState -> navigationHolder.state = newState },
@@ -53,7 +53,7 @@ fun <Params: Any, State: NavState<Params>, Instance: Any, Ui: Any> NavigationCon
     )
 }
 
-inline fun <Params: Parcelable, reified State, Instance: Any, Ui: Any> NavigationContext.children(
+internal inline fun <Params: Parcelable, reified State, Instance: Any, Ui: Any> NavigationContext.children(
     navigationHolder: NavigationHolder<Params, State>,
     handleBackButton: Boolean,
     tag: String,

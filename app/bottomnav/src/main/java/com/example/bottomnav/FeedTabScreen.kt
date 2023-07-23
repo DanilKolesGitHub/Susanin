@@ -7,8 +7,8 @@ import com.example.navigation.FeedScreenParams
 import com.example.navigation.FeedTabScreenParams
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.screens.ViewScreen
+import com.example.navigation.screens.stack
 import com.example.navigation.stack.StackHostView
-import com.example.navigation.stack.stack
 import com.example.navigation.view.ForwardBackwardTransition
 
 class FeedTabScreen(context: ScreenContext, params: FeedTabScreenParams): ViewScreen<FeedTabScreenParams>(context, params) {

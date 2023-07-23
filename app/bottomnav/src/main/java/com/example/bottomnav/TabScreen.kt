@@ -5,14 +5,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.arkivanov.decompose.value.observe
-import com.example.navigation.*
+import com.example.navigation.FeedTabScreenParams
+import com.example.navigation.TabScreenParams
+import com.example.navigation.TreeTabScreenParams
+import com.example.navigation.VideoTabScreenParams
 import com.example.navigation.context.ScreenContext
+import com.example.navigation.navigation.transaction
 import com.example.navigation.pages.PagesHostView
-import com.example.navigation.pages.pages
+import com.example.navigation.pages.openPages
 import com.example.navigation.router.ScreenRegister
 import com.example.navigation.screens.ScreenFactory
 import com.example.navigation.screens.ScreenParams
 import com.example.navigation.screens.ViewScreen
+import com.example.navigation.screens.pages
 import com.example.navigation.view.ForwardBackwardTransition
 
 class TabScreen(context: ScreenContext, type: TabScreenParams): ViewScreen<TabScreenParams>(context, type) {
@@ -63,7 +68,8 @@ class TabScreen(context: ScreenContext, type: TabScreenParams): ViewScreen<TabSc
     }
 
     private fun navigate(screen: ScreenParams) {
-        navigation.findHolder(NavigationType.PAGES.name)!!.navigator.open(screen) { _, _ ->
+        transaction {
+            openPages(screen)
         }
     }
 }

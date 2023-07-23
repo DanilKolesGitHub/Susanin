@@ -10,6 +10,7 @@ import com.arkivanov.essenty.lifecycle.*
 import com.example.bottomnav.registerTabScreens
 import com.example.feed.registerFeedScreens
 import com.example.navigation.MainScreenParams
+import com.example.navigation.context.DefaultNavigationContext
 import com.example.navigation.context.DefaultScreenContext
 import com.example.navigation.navigation.NavigationNode
 import com.example.navigation.router.Router
@@ -33,13 +34,15 @@ class MainActivity : AppCompatActivity() {
         registerSearchScreens(register)
         registerMainScreens(register)
 
-        val router = Router(register)
-        val rootNode = NavigationNode(MainScreenParams, null, router)
-        router.initRoot(rootNode)
+        val rootNode = NavigationNode(MainScreenParams, null)
+        val router = Router(register, rootNode)
         val mainScreen = MainScreen(
             DefaultScreenContext(
-                defaultComponentContext(),
-                rootNode,
+                DefaultNavigationContext(
+                    defaultComponentContext(),
+                    rootNode
+                ),
+                router,
             )
         )
         val view = mainScreen.createView(window.decorView as ViewGroup, mainScreen.lifecycle)

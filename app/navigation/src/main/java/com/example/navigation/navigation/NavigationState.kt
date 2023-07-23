@@ -34,21 +34,22 @@ class NavigationNode(
 
     val children = HashMap<Any, NavigationNode>()
 
-    fun <P: Any> provideChild(childParams: P): NavigationNode {
+    internal fun <P: Any> provideChild(childParams: P): NavigationNode {
         return children.getOrPut(childParams) { NavigationNode(childParams, this) }
     }
 
-    fun <P: Any> removeChild(childParams: P) {
-        children.remove(childParams)
+    internal fun <P: Any> removeChild(childParams: P) {
+        val child = children.remove(childParams)
+        child?.clear()
     }
 
-    fun <P: Any> findChild(childParams: P): NavigationNode? {
+    internal fun <P: Any> findChild(childParams: P): NavigationNode? {
         return children[childParams]
     }
 
     private val navigators = HashMap<String, Holder>()
 
-    fun <P: Any, S : NavState<P>> provideNavigation(
+    internal fun <P: Any, S : NavState<P>> provideNavigation(
         tag: String,
         factory: (initial: List<P>?) -> NavigationHolder<P, S>
     ) : NavigationHolder<P, S> {
@@ -60,15 +61,39 @@ class NavigationNode(
         return holder as NavigationHolder<P, S>
     }
 
-    fun <P: Any> findHolder(tag: String): NavigationHolder<P, *>? {
+    internal fun <P: Any> findHolder(tag: String): NavigationHolder<P, *>? {
         return navigators[tag] as? NavigationHolder<P, *>
+    }
+
+    private fun clear(){
+        children.clear()
+        navigators.clear()
+    }
+
+    companion object {
+        fun NavigationNode.dumpTree(): String{
+            var root: NavigationNode = this
+            while (root.parent != null)
+                root = root.parent!!
+            val builder = StringBuilder()
+            root.dumpNode("", builder)
+            return builder.toString()
+        }
+
+        fun NavigationNode.dumpNode(prefix: String, builder: StringBuilder) {
+            builder.append(prefix).append(params.toString()).append("\n")
+            val childPrefix = "$prefix    "
+            children.values.forEach {
+                it.dumpNode(childPrefix, builder)
+            }
+        }
     }
 }
 
 open class Holder(val tag: String)
 
-open class NavigationHolder<P : Any, S: NavState<P>>(
+internal open class NavigationHolder<P : Any, S: NavState<P>>(
     tag: String,
-    val navigator: Navigation<P, S>,
+    val navigation: Navigation<P, S>,
     var state: S,
 ) : Holder(tag)

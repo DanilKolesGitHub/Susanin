@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.pages.ChildPages
 import com.arkivanov.decompose.value.Value
 import com.example.navigation.NavigationType
 import com.example.navigation.context.NavigationContext
+import com.example.navigation.navigation.TransactionBuilder
 import com.example.navigation.navigation.children
 
 fun <Params: Parcelable, Instance: Any> NavigationContext.pages(
@@ -26,7 +27,7 @@ fun <Params: Parcelable, Instance: Any> NavigationContext.pages(
 )
 
 fun <Params: Parcelable, Instance: Any> NavigationContext.pages(
-    initialPages: () -> List<Params>,
+    initialProvider: () -> List<Params>,
     initialSelection: Int,
     handleBackButton: Boolean = true,
     closeBehaviour: CloseBehaviour,
@@ -35,7 +36,7 @@ fun <Params: Parcelable, Instance: Any> NavigationContext.pages(
     factory: (params: Params, context: NavigationContext) -> Instance,
 ): Value<ChildPages<Params, Instance>> {
     val navigationHolder = navigation.provideNavigation(tag) { pending ->
-        val pages = initialPages()
+        val pages = initialProvider()
         val pendingSelected: Params? = pending?.lastOrNull()
         val selected = pendingSelected?.let { pages.indexOf(it) } ?: initialSelection
         PagesNavigationHolder(
@@ -85,3 +86,8 @@ enum class CloseBehaviour {
             Circle -> PagesNavigation.CloseBehaviour.Circle
         }
 }
+
+fun <P: Any> TransactionBuilder.openPages(params: P) = open(params, NavigationType.PAGES.name)
+fun <P: Any> TransactionBuilder.closePages(params: P) = close(params, NavigationType.PAGES.name)
+fun <P: Any> TransactionBuilder.parentOpenPages(params: P) = parentOpen(params, NavigationType.PAGES.name)
+fun <P: Any> TransactionBuilder.parentClosePages(params: P) = parentClose(params, NavigationType.PAGES.name)
