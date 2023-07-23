@@ -63,7 +63,7 @@ class TabScreen(context: ScreenContext, type: TabScreenParams): ViewScreen<TabSc
     }
 
     private fun navigate(screen: ScreenParams) {
-        node.findHolder(NavigationType.PAGES.name)!!.navigator.open(screen) { _, _ ->
+        navigation.findHolder(NavigationType.PAGES.name)!!.navigator.open(screen) { _, _ ->
         }
     }
 }

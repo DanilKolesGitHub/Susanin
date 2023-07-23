@@ -1,37 +1,40 @@
 package com.example.navigation.navigation
 
+import android.os.Parcelable
 import com.arkivanov.decompose.Child
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.router.children.NavState
 import com.arkivanov.decompose.router.children.children
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.instancekeeper.InstanceKeeper
 import com.arkivanov.essenty.instancekeeper.getOrCreate
 import com.arkivanov.essenty.parcelable.ParcelableContainer
-import com.example.navigation.context.DefaultScreenContext
-import com.example.navigation.context.ScreenContext
-import com.example.navigation.screens.Screen
-import com.example.navigation.screens.ScreenParams
-import com.example.navigation.state.HostState
+import com.arkivanov.essenty.parcelable.consumeRequired
+import com.example.navigation.context.DefaultNavigationContext
+import com.example.navigation.context.NavigationContext
 
-fun <State: HostState, Ui: Any> ScreenContext.childScreens(
-    navigationHolder: NavigationHolder<State>,
+fun <Params: Any, State: NavState<Params>, Instance: Any, Ui: Any> NavigationContext.children(
+    navigationHolder: NavigationHolder<Params, State>,
     handleBackButton: Boolean,
     tag: String,
-    stateMapper: (state: State, children: List<Child<ScreenParams, Screen<*>>>) -> Ui,
+    stateMapper: (state: State, children: List<Child<Params, Instance>>) -> Ui,
+    factory: (params: Params, context: NavigationContext) -> Instance,
     saveState: (state: State) -> ParcelableContainer?,
     restoreState: (container: ParcelableContainer) -> State?,
 ): Value<Ui> {
-    val decomposeFactory = { params: ScreenParams, componentContext: ComponentContext ->
+    val decomposeFactory = { params: Params, componentContext: ComponentContext ->
         componentContext.instanceKeeper.getOrCreate(params) {
                 object : InstanceKeeper.Instance {
-                    override fun onDestroy() { node.removeChild(params) }
+                    override fun onDestroy() {
+                        navigation.removeChild(params)
+                    }
                 }
         }
-        node.router.screenFactory.create(
+        factory(
             params,
-            DefaultScreenContext(
+            DefaultNavigationContext(
                 componentContext,
-                node.provideChild(params)
+                navigation.provideChild(params)
             )
         )
     }
@@ -39,15 +42,32 @@ fun <State: HostState, Ui: Any> ScreenContext.childScreens(
         source = navigationHolder.navigator,
         key = tag,
         initialState = { navigationHolder.state },
+        saveState = saveState,
+        restoreState = restoreState,
         navTransformer = { state, event -> event.transformer(state) },
         backTransformer = { if (handleBackButton) navigationHolder.navigator.back(it) else null },
         onEventComplete = { event, newState, oldState -> event.onComplete(newState, oldState) },
         stateMapper = stateMapper,
         onStateChanged = { newState, oldState -> navigationHolder.state = newState },
         childFactory = decomposeFactory,
-        saveState = saveState,
-        restoreState = restoreState,
     )
 }
+
+inline fun <Params: Parcelable, reified State, Instance: Any, Ui: Any> NavigationContext.children(
+    navigationHolder: NavigationHolder<Params, State>,
+    handleBackButton: Boolean,
+    tag: String,
+    noinline stateMapper: (state: State, children: List<Child<Params, Instance>>) -> Ui,
+    noinline factory: (params: Params, context: NavigationContext) -> Instance,
+): Value<Ui> where State : NavState<Params>, State : Parcelable =
+    children(
+        navigationHolder = navigationHolder,
+        handleBackButton = handleBackButton,
+        tag = tag,
+        stateMapper = stateMapper,
+        factory = factory,
+        saveState = { ParcelableContainer(it) },
+        restoreState = { it.consumeRequired(State::class) },
+    )
 
 

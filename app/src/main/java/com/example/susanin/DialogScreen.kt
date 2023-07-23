@@ -9,6 +9,7 @@ import android.widget.TextView
 import com.example.navigation.DialogScreenParams
 import com.example.navigation.NavigationType
 import com.example.navigation.context.ScreenContext
+import com.example.navigation.screens.ScreenParams
 import com.example.navigation.screens.ViewScreen
 
 class DialogScreen(context: ScreenContext, type: DialogScreenParams): ViewScreen<DialogScreenParams>(context, type) {
@@ -31,7 +32,7 @@ class DialogScreen(context: ScreenContext, type: DialogScreenParams): ViewScreen
     }
 
     private fun navigate(resultScreenParams: DialogScreenParams) {
-        node.parent!!.findHolder(NavigationType.SLOT.name)!!.navigator.open(resultScreenParams)
+        navigation.parent!!.findHolder<ScreenParams>(NavigationType.SLOT.name)!!.navigator.open(resultScreenParams)
     }
 
 }

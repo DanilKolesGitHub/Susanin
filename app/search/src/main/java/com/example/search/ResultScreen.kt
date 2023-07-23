@@ -4,12 +4,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import com.arkivanov.decompose.ComponentContext
 import com.example.navigation.NavigationType
 import com.example.navigation.ResultScreenParams
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.screens.Screen
-import com.example.navigation.screens.ScreenParams
 import com.example.navigation.screens.ViewScreen
 
 class ResultScreen(context: ScreenContext, type: ResultScreenParams): ViewScreen<ResultScreenParams>(context, type) {
@@ -30,7 +27,7 @@ class ResultScreen(context: ScreenContext, type: ResultScreenParams): ViewScreen
     }
 
     private fun navigate(resultScreenParams: ResultScreenParams) {
-        node.parent!!.findHolder(NavigationType.STACK.name)!!.navigator.open(resultScreenParams)
+        navigation.parent!!.findHolder(NavigationType.STACK.name)!!.navigator.open(resultScreenParams)
     }
 
 }

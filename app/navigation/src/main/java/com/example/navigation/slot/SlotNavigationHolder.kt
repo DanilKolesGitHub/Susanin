@@ -1,12 +1,12 @@
 package com.example.navigation.slot
 
+import android.os.Parcelable
 import com.example.navigation.navigation.NavigationHolder
-import com.example.navigation.screens.ScreenParams
 
-internal class SlotNavigationHolder(
+internal class SlotNavigationHolder<P : Parcelable>(
     tag: String,
-    initial: ScreenParams?
-): NavigationHolder<SlotHostState>(
+    initial: P?
+): NavigationHolder<P, SlotHostState<P>>(
     tag,
     SlotNavigation(),
     SlotHostState(initial)

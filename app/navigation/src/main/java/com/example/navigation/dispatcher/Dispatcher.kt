@@ -12,7 +12,7 @@ internal class Dispatcher(
     private val navigationState: NavigationState,
 ) {
     fun open(path: List<Any>, from: List<ScreenParams>) {
-        navigationState.open(preparePath(path, from))
+//        navigationState.open(preparePath(path, from))
     }
 
     private fun preparePath(screens: List<Any>, from: List<ScreenParams>): List<ScreenParams> {

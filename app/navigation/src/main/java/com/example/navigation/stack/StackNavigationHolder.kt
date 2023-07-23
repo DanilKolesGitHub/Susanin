@@ -1,12 +1,12 @@
 package com.example.navigation.stack
 
+import android.os.Parcelable
 import com.example.navigation.navigation.NavigationHolder
-import com.example.navigation.screens.ScreenParams
 
-internal class StackNavigationHolder(
+internal class StackNavigationHolder<P: Parcelable>(
     tag: String,
-    initial: List<ScreenParams>
-): NavigationHolder<StackHostState>(
+    initial: List<P>
+): NavigationHolder<P, StackHostState<P>>(
     tag,
     StackNavigation(),
     StackHostState(initial)

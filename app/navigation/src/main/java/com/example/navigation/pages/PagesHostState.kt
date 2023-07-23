@@ -2,21 +2,20 @@ package com.example.navigation.pages
 
 import android.os.Parcelable
 import com.arkivanov.decompose.router.children.ChildNavState
-import com.example.navigation.screens.ScreenParams
-import com.example.navigation.state.ChildState
-import com.example.navigation.state.HostState
+import com.arkivanov.decompose.router.children.NavState
+import com.arkivanov.decompose.router.children.SimpleChildNavState
 import kotlinx.android.parcel.Parcelize
 
 
 @Parcelize
-internal data class PagesHostState(
-    internal val pages: List<ScreenParams>,
+internal data class PagesHostState<P : Parcelable>(
+    internal val pages: List<P>,
     internal val selected: Int,
-): HostState, Parcelable {
+): NavState<P>, Parcelable {
 
-    override val children: List<ChildState> =
+    override val children: List<ChildNavState<P>> =
         pages.mapIndexed { index, page ->
-            ChildState(
+            SimpleChildNavState(
                 configuration = page,
                 status = if (index == selected)
                     ChildNavState.Status.ACTIVE

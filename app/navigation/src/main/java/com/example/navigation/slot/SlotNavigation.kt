@@ -1,13 +1,13 @@
 package com.example.navigation.slot
 
+import android.os.Parcelable
 import com.example.navigation.navigation.DefaultNavigation
-import com.example.navigation.screens.ScreenParams
 
-internal class SlotNavigation: DefaultNavigation<SlotHostState>() {
+internal class SlotNavigation<P: Parcelable> : DefaultNavigation<P, SlotHostState<P>>() {
 
     override fun open(
-        screenParams: ScreenParams,
-        onComplete: (newState: SlotHostState, oldState: SlotHostState) -> Unit
+        screenParams: P,
+        onComplete: (newState: SlotHostState<P>, oldState: SlotHostState<P>) -> Unit
     ) = navigate(
         transformer = {
             if (it.slot == screenParams)
@@ -19,11 +19,11 @@ internal class SlotNavigation: DefaultNavigation<SlotHostState>() {
     )
 
     override fun close(
-        screenParams: ScreenParams,
-        onComplete: (newState: SlotHostState, oldState: SlotHostState) -> Unit
+        params: P,
+        onComplete: (newState: SlotHostState<P>, oldState: SlotHostState<P>) -> Unit
     ) = navigate(
         transformer = {
-            if (it.slot == screenParams)
+            if (it.slot == params)
                 SlotHostState(null)
             else
                 it.copy()
@@ -31,7 +31,7 @@ internal class SlotNavigation: DefaultNavigation<SlotHostState>() {
         onComplete = onComplete
     )
 
-    override fun back(state: SlotHostState): (() -> SlotHostState)? {
+    override fun back(state: SlotHostState<P>): (() -> SlotHostState<P>)? {
         if (state.slot == null) return null
         return {
             SlotHostState(null)

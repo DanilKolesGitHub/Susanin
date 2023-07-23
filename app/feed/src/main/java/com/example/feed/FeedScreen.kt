@@ -4,13 +4,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import com.arkivanov.decompose.ComponentContext
 import com.example.navigation.*
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.router.ScreenRegister
-import com.example.navigation.screens.Screen
 import com.example.navigation.screens.ScreenFactory
-import com.example.navigation.screens.ScreenParams
 import com.example.navigation.screens.ViewScreen
 
 class FeedScreen(context: ScreenContext, type: FeedScreenParams): ViewScreen<FeedScreenParams>(context, type) {
@@ -30,7 +27,7 @@ class FeedScreen(context: ScreenContext, type: FeedScreenParams): ViewScreen<Fee
     }
 
     private fun navigate() {
-        node.parent!!.findHolder(NavigationType.STACK.name)!!.navigator.open(SearchScreenParams)
+        navigation.parent!!.findHolder(NavigationType.STACK.name)!!.navigator.open(SearchScreenParams)
     }
 
 }

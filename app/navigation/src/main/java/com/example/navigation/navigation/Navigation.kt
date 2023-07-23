@@ -1,26 +1,25 @@
 package com.example.navigation.navigation
 
+import com.arkivanov.decompose.router.children.NavState
 import com.arkivanov.decompose.router.children.NavigationSource
 import com.arkivanov.decompose.router.children.SimpleNavigation
-import com.example.navigation.screens.ScreenParams
-import com.example.navigation.state.HostState
 
-interface Navigation<S : HostState> : NavigationSource<Event<S>>, Navigator<S>
+interface Navigation<P : Any,  S : NavState<P>> : NavigationSource<Event<S>>, Navigator<P, S>
 
-class Event<S : HostState>(
+class Event<S : NavState<Any>>(
     val transformer: (state: S) -> S,
     val onComplete: (newState: S, oldState: S) -> Unit = { _, _ -> },
 )
 
-interface Navigator<S: HostState>  {
+interface Navigator<P : Any,  S : NavState<P>>  {
 
     fun open(
-        screenParams: ScreenParams,
+        params: P,
         onComplete: (newState: S, oldState: S) -> Unit = { _, _ -> },
     )
 
     fun close(
-        screenParams: ScreenParams,
+        params: P,
         onComplete: (newState: S, oldState: S) -> Unit = { _, _ -> },
     )
 
@@ -28,7 +27,7 @@ interface Navigator<S: HostState>  {
 
 }
 
-abstract class DefaultNavigation<S : HostState> : Navigation<S> {
+abstract class DefaultNavigation<P : Any, S : NavState<P>> : Navigation<P, S> {
 
     private val relay = SimpleNavigation<Event<S>>()
 

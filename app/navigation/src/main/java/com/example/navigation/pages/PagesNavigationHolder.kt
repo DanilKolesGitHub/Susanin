@@ -1,16 +1,15 @@
 package com.example.navigation.pages
 
+import android.os.Parcelable
 import com.example.navigation.navigation.NavigationHolder
-import com.example.navigation.screens.ScreenParams
-import com.example.navigation.slot.SlotHostState
 
-internal class PagesNavigationHolder(
+internal class PagesNavigationHolder<P : Parcelable>(
     tag: String,
-    pages: List<ScreenParams>,
+    pages: List<P>,
     selected: Int,
     closeBehaviour: PagesNavigation.CloseBehaviour,
     backBehaviour: PagesNavigation.BackBehaviour,
-): NavigationHolder<PagesHostState>(
+): NavigationHolder<P, PagesHostState<P>>(
     tag,
     PagesNavigation(closeBehaviour, backBehaviour),
     PagesHostState(pages, selected)

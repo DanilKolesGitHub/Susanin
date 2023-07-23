@@ -1,20 +1,20 @@
 package com.example.navigation.pages
 
+import android.os.Parcelable
 import com.example.navigation.navigation.DefaultNavigation
-import com.example.navigation.screens.ScreenParams
 
-internal class PagesNavigation(
+internal class PagesNavigation<P: Parcelable>(
     private val closeBehaviour: CloseBehaviour,
     private val backBehaviour: BackBehaviour,
-): DefaultNavigation<PagesHostState>() {
+): DefaultNavigation<P, PagesHostState<P>>() {
 
     override fun open(
-        screenParams: ScreenParams,
-        onComplete: (newState: PagesHostState, oldState: PagesHostState) -> Unit
+        params: P,
+        onComplete: (newState: PagesHostState<P>, oldState: PagesHostState<P>) -> Unit
     ) = navigate (
         transformer = {
-            if (it.pages.contains(screenParams))
-                it.copy(selected = it.pages.indexOf(screenParams))
+            if (it.pages.contains(params))
+                it.copy(selected = it.pages.indexOf(params))
             else
                 it.copy()
         },
@@ -22,12 +22,12 @@ internal class PagesNavigation(
     )
 
     override fun close(
-        screenParams: ScreenParams,
-        onComplete: (newState: PagesHostState, oldState: PagesHostState) -> Unit
+        params: P,
+        onComplete: (newState: PagesHostState<P>, oldState: PagesHostState<P>) -> Unit
     ) = navigate (
         transformer = {
-            if (it.pages.indexOf(screenParams) == it.selected) {
-                closeBehaviour.close(it, screenParams)
+            if (it.pages.indexOf(params) == it.selected) {
+                closeBehaviour.close(it)
             } else {
                 it.copy()
             }
@@ -35,15 +35,16 @@ internal class PagesNavigation(
         onComplete = onComplete
     )
 
-    override fun back(state: PagesHostState): (() -> PagesHostState)? {
+    override fun back(state: PagesHostState<P>): (() -> PagesHostState<P>)? {
         return backBehaviour.back(state)
     }
 
     sealed interface CloseBehaviour {
-        fun close(state: PagesHostState, screenParams: ScreenParams): PagesHostState
+        fun <P: Parcelable> close(state: PagesHostState<P>): PagesHostState<P>
 
         object Circle : CloseBehaviour {
-            override fun close(state: PagesHostState, screenParams: ScreenParams): PagesHostState {
+
+            override fun <P : Parcelable> close(state: PagesHostState<P>): PagesHostState<P> {
                 return if (state.selected == 0) {
                     state.copy(selected = state.pages.size - 1)
                 } else {
@@ -53,13 +54,15 @@ internal class PagesNavigation(
         }
 
         object ToFirst : CloseBehaviour {
-            override fun close(state: PagesHostState, screenParams: ScreenParams): PagesHostState {
+
+            override fun <P : Parcelable> close(state: PagesHostState<P>): PagesHostState<P> {
                 return state.copy(selected = 0)
             }
         }
 
         object UntilFirst : CloseBehaviour {
-            override fun close(state: PagesHostState, screenParams: ScreenParams): PagesHostState {
+
+            override fun <P : Parcelable> close(state: PagesHostState<P>): PagesHostState<P> {
                 return if (state.selected == 0) {
                     state.copy(selected = 0)
                 } else {
@@ -70,34 +73,33 @@ internal class PagesNavigation(
     }
 
     sealed interface BackBehaviour {
-        fun back(state: PagesHostState): (() -> PagesHostState)?
-
-        object Never : BackBehaviour {
-            override fun back(state: PagesHostState): (() -> PagesHostState)? = null
-        }
+        fun  <P : Parcelable> back(state: PagesHostState<P>): (() -> PagesHostState<P>)?
 
         object Circle : BackBehaviour {
-            override fun back(state: PagesHostState): (() -> PagesHostState)? {
+
+            override fun <P : Parcelable> back(state: PagesHostState<P>): (() -> PagesHostState<P>)? {
                 return {
-                    CloseBehaviour.Circle.close(state, state.pages[state.selected])
+                    CloseBehaviour.Circle.close(state)
                 }
             }
         }
 
         object ToFirst : BackBehaviour {
-            override fun back(state: PagesHostState): (() -> PagesHostState)? {
+
+            override fun <P : Parcelable> back(state: PagesHostState<P>): (() -> PagesHostState<P>)? {
                 if (state.selected == 0) return null
                 return {
-                    CloseBehaviour.ToFirst.close(state, state.pages[state.selected])
+                    CloseBehaviour.ToFirst.close(state)
                 }
             }
         }
 
         object UntilFirst : BackBehaviour {
-            override fun back(state: PagesHostState): (() -> PagesHostState)? {
+
+            override fun <P : Parcelable> back(state: PagesHostState<P>): (() -> PagesHostState<P>)? {
                 if (state.selected == 0) return null
                 return {
-                    CloseBehaviour.UntilFirst.close(state, state.pages[state.selected])
+                    CloseBehaviour.UntilFirst.close(state)
                 }
             }
         }

@@ -1,37 +1,37 @@
 package com.example.navigation.stack
 
+import android.os.Parcelable
 import com.example.navigation.navigation.DefaultNavigation
-import com.example.navigation.screens.ScreenParams
 
-internal class StackNavigation: DefaultNavigation<StackHostState>() {
+internal class StackNavigation<P: Parcelable>: DefaultNavigation<P, StackHostState<P>>() {
 
     override fun open(
-        screenParams: ScreenParams,
-        onComplete: (newState: StackHostState, oldState: StackHostState) -> Unit
+        params: P,
+        onComplete: (newState: StackHostState<P>, oldState: StackHostState<P>) -> Unit
     ) = navigate (
             transformer = {
-                if (it.stack.contains(screenParams))
-                    it.copy(stack = it.stack.dropLastWhile { param -> param != screenParams })
+                if (it.stack.contains(params))
+                    it.copy(stack = it.stack.dropLastWhile { param -> param != params })
                 else
-                    it.copy(stack = it.stack + screenParams)
+                    it.copy(stack = it.stack + params)
             },
             onComplete = onComplete
         )
 
     override fun close(
-        screenParams: ScreenParams,
-        onComplete: (newState: StackHostState, oldState: StackHostState) -> Unit
+        params: P,
+        onComplete: (newState: StackHostState<P>, oldState: StackHostState<P>) -> Unit
     ) = navigate (
             transformer = {
                 if (it.stack.size == 1)
                     it.copy()
                 else
-                    it.copy(stack = it.stack.takeWhile { param -> param != screenParams })
+                    it.copy(stack = it.stack.takeWhile { param -> param != params })
             },
             onComplete = onComplete
         )
 
-    override fun back(state: StackHostState): (() -> StackHostState)? {
+    override fun back(state: StackHostState<P>): (() -> StackHostState<P>)? {
         if (state.stack.size == 1) return null
         return {
             StackHostState(stack = state.stack.dropLast(1))

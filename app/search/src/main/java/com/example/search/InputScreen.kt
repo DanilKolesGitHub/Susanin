@@ -30,7 +30,7 @@ class InputScreen(context: ScreenContext, type: InputScreenParams): ViewScreen<I
     }
 
     private fun navigate(resultScreenParams: ResultScreenParams) {
-        node.parent!!.findHolder(NavigationType.STACK.name)!!.navigator.open(resultScreenParams)
+        navigation.parent!!.findHolder(NavigationType.STACK.name)!!.navigator.open(resultScreenParams)
     }
 
 }

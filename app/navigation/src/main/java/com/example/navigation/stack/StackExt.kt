@@ -1,56 +1,56 @@
 package com.example.navigation.stack
 
+import android.os.Parcelable
 import com.arkivanov.decompose.Child
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.parcelable.ParcelableContainer
-import com.arkivanov.essenty.parcelable.consumeRequired
 import com.example.navigation.NavigationType
-import com.example.navigation.context.ScreenContext
-import com.example.navigation.navigation.childScreens
-import com.example.navigation.screens.Screen
-import com.example.navigation.screens.ScreenParams
+import com.example.navigation.context.NavigationContext
+import com.example.navigation.navigation.children
 
-fun ScreenContext.stack(
-    initial: ScreenParams,
+fun <Params: Parcelable, Instance: Any> NavigationContext.stack(
+    initial: Params,
     addInitial: Boolean = false,
     handleBackButton: Boolean = true,
     tag: String = NavigationType.STACK.name,
-) = stack (
-    initial = { listOf(initial) },
+    factory: (params: Params, context: NavigationContext) -> Instance,
+) = stack(
+    initialProvider = { listOf(initial) },
     addInitial = addInitial,
     handleBackButton = handleBackButton,
     tag = tag,
+    factory,
 )
 
-fun ScreenContext.stack(
-    initial: () -> List<ScreenParams>,
+fun <Params: Parcelable, Instance: Any> NavigationContext.stack(
+    initialProvider: () -> List<Params>,
     addInitial: Boolean = false,
     handleBackButton: Boolean = true,
     tag: String = NavigationType.STACK.name,
-): Value<ChildStack<ScreenParams, Screen<*>>> {
-    val navigationHolder = node.provideNavigation(tag) { pending ->
+    factory: (params: Params, context: NavigationContext) -> Instance,
+): Value<ChildStack<Params, Instance>> {
+    val navigationHolder = navigation.provideNavigation(tag) { pending ->
+        val pendingStack: List<Params>? = pending
         val initialScreens = when {
-            pending.isNullOrEmpty() -> initial()
-            addInitial -> initial() + pending
-            else -> pending
+            pendingStack.isNullOrEmpty() -> initialProvider()
+            addInitial -> initialProvider() + pendingStack
+            else -> pendingStack
         }
         StackNavigationHolder(tag, initialScreens)
     }
-    return childScreens(
+    return children(
         navigationHolder = navigationHolder,
         handleBackButton = handleBackButton,
         tag = tag,
         stateMapper =  { _, children ->
             @Suppress("UNCHECKED_CAST")
-            val createdChildren = children as List<Child.Created<ScreenParams, Screen<*>>>
+            val createdChildren = children as List<Child.Created<Params, Instance>>
 
             ChildStack(
                 active = createdChildren.last(),
                 backStack = createdChildren.dropLast(1),
             )
         },
-        saveState = { ParcelableContainer(it) },
-        restoreState = { it.consumeRequired(StackHostState::class) }
+        factory,
     )
 }

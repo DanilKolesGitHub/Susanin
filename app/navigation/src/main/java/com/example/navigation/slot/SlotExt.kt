@@ -1,39 +1,39 @@
 package com.example.navigation.slot
 
+import android.os.Parcelable
 import com.arkivanov.decompose.Child
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.parcelable.ParcelableContainer
-import com.arkivanov.essenty.parcelable.consumeRequired
 import com.example.navigation.NavigationType
-import com.example.navigation.context.ScreenContext
-import com.example.navigation.navigation.childScreens
-import com.example.navigation.screens.Screen
-import com.example.navigation.screens.ScreenParams
+import com.example.navigation.context.NavigationContext
+import com.example.navigation.navigation.children
 
-fun ScreenContext.slot(
-    initial: ScreenParams? = null,
+fun <Params: Parcelable, Instance: Any> NavigationContext.slot(
+    initial: Params? = null,
     handleBackButton: Boolean = true,
     tag: String = NavigationType.SLOT.name,
-) = slot (
-    initial = { initial },
+    factory: (params: Params, context: NavigationContext) -> Instance,
+) = slot(
+    initialProvider = { initial },
     handleBackButton = handleBackButton,
     tag = tag,
+    factory = factory
 )
 
-fun ScreenContext.slot(
-    initial: () -> ScreenParams?,
+fun <Params: Parcelable, Instance: Any> NavigationContext.slot(
+    initialProvider: () -> Params?,
     handleBackButton: Boolean = true,
     tag: String = NavigationType.SLOT.name,
-): Value<ChildSlot<ScreenParams, Screen<*>>> {
-    val navigationHolder = node.provideNavigation(tag) { pending ->
+    factory: (params: Params, context: NavigationContext) -> Instance,
+): Value<ChildSlot<Params, Instance>> {
+    val navigationHolder = navigation.provideNavigation(tag) { pending ->
         val initialScreen = when {
-            pending.isNullOrEmpty() -> initial()
+            pending.isNullOrEmpty() -> initialProvider()
             else -> pending.lastOrNull()
         }
         SlotNavigationHolder(tag, initialScreen)
     }
-    return childScreens(
+    return children(
         navigationHolder = navigationHolder,
         handleBackButton = handleBackButton,
         tag = tag,
@@ -42,7 +42,6 @@ fun ScreenContext.slot(
             val createdChild= children.firstOrNull()  as? Child.Created?
             ChildSlot(createdChild)
         },
-        saveState = { ParcelableContainer(it) },
-        restoreState = { it.consumeRequired(SlotHostState::class) }
+        factory
     )
 }

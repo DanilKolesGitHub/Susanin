@@ -1,44 +1,43 @@
 package com.example.navigation.pages
 
+import android.os.Parcelable
 import com.arkivanov.decompose.router.pages.ChildPages
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.essenty.parcelable.ParcelableContainer
-import com.arkivanov.essenty.parcelable.consumeRequired
 import com.example.navigation.NavigationType
-import com.example.navigation.context.ScreenContext
-import com.example.navigation.navigation.childScreens
-import com.example.navigation.screens.Screen
-import com.example.navigation.screens.ScreenParams
+import com.example.navigation.context.NavigationContext
+import com.example.navigation.navigation.children
 
-fun ScreenContext.pages(
-    initialPages: List<ScreenParams>,
+fun <Params: Parcelable, Instance: Any> NavigationContext.pages(
+    initialPages: List<Params>,
     initialSelection: Int,
     handleBackButton: Boolean = true,
     closeBehaviour: CloseBehaviour = CloseBehaviour.Circle,
     backBehaviour: BackBehaviour = BackBehaviour.Circle,
     tag: String = NavigationType.PAGES.name,
+    factory: (params: Params, context: NavigationContext) -> Instance,
 ) = pages(
     { initialPages },
     initialSelection,
     handleBackButton,
     closeBehaviour,
     backBehaviour,
-    tag
+    tag,
+    factory
 )
 
-fun ScreenContext.pages(
-    initialPages: () -> List<ScreenParams>,
+fun <Params: Parcelable, Instance: Any> NavigationContext.pages(
+    initialPages: () -> List<Params>,
     initialSelection: Int,
     handleBackButton: Boolean = true,
     closeBehaviour: CloseBehaviour,
     backBehaviour: BackBehaviour,
     tag: String = NavigationType.PAGES.name,
-): Value<ChildPages<ScreenParams, Screen<*>>> {
-    val navigationHolder = node.provideNavigation(tag) { pending ->
+    factory: (params: Params, context: NavigationContext) -> Instance,
+): Value<ChildPages<Params, Instance>> {
+    val navigationHolder = navigation.provideNavigation(tag) { pending ->
         val pages = initialPages()
-        val selected = pending?.lastOrNull()?.let {
-            pages.indexOf(it)
-        } ?: initialSelection
+        val pendingSelected: Params? = pending?.lastOrNull()
+        val selected = pendingSelected?.let { pages.indexOf(it) } ?: initialSelection
         PagesNavigationHolder(
             tag,
             pages,
@@ -47,7 +46,7 @@ fun ScreenContext.pages(
             backBehaviour.navigationBehaviour,
         )
     }
-    return childScreens(
+    return children(
         navigationHolder = navigationHolder,
         handleBackButton = handleBackButton,
         tag = tag,
@@ -57,13 +56,11 @@ fun ScreenContext.pages(
                 selectedIndex = state.selected,
             )
         },
-        saveState = { ParcelableContainer(it) },
-        restoreState = { it.consumeRequired(PagesHostState::class) }
+        factory = factory
     )
 }
 
 enum class BackBehaviour {
-    Never,
     ToFirst,
     UntilFirst,
     Circle;
@@ -73,7 +70,6 @@ enum class BackBehaviour {
             ToFirst -> PagesNavigation.BackBehaviour.ToFirst
             UntilFirst -> PagesNavigation.BackBehaviour.UntilFirst
             Circle -> PagesNavigation.BackBehaviour.Circle
-            Never -> PagesNavigation.BackBehaviour.Never
     }
 }
 
