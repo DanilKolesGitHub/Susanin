@@ -27,6 +27,8 @@ class PagesHostView @JvmOverloads constructor(
     /**
      * Подписывается на изменение ChildPages<C, T> и отрисовывает View.
      * T должен наследовать ViewRender.
+     * С должен быть Parcelable или data class, data object.
+     * Необходимо, поскольку является ключем для сохранения состояния View.
      *
      * @param pages Источник ChildPages
      * @param hostViewLifecycle Родительский ЖЦ в котором находится PagesHostView.

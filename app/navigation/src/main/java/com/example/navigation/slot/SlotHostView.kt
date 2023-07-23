@@ -23,6 +23,8 @@ class SlotHostView @JvmOverloads constructor(
     /**
      * Подписывается на изменение ChildSlot<C, T> и отрисовывает View.
      * T должен наследовать ViewRender.
+     * С должен быть Parcelable или data class, data object.
+     * Необходимо, поскольку является ключем для сохранения состояния View.
      *
      * @param slot Источник ChildSlot
      * @param hostViewLifecycle Родительский ЖЦ в котором находится SlotHostView.

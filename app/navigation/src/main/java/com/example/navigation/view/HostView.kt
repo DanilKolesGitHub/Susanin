@@ -3,7 +3,6 @@ package com.example.navigation.view
 import android.content.Context
 import android.os.Parcelable
 import android.util.AttributeSet
-import android.util.Log
 import android.util.SparseArray
 import android.view.View
 import androidx.core.view.ViewCompat
@@ -30,11 +29,11 @@ open class HostView @JvmOverloads constructor(
      * Класс который описывает текущий открытый экран.
      */
     protected inner class ActiveChild<out C : Any, out T : Any>(
-        val child: Child.Created<C, T>,
-        val lifecycle: LifecycleRegistry,
-        val view: View,
+        internal val child: Child.Created<C, T>,
+        internal val lifecycle: LifecycleRegistry,
+        internal val view: View,
     ) {
-        internal val parcelable: Parcelable = child.toParcelable()
+        internal val id: Parcelable = child.id()
         val transition: Transition?
         get() =
             (child.configuration as? TransitionProvider)?.transition ?:
@@ -48,7 +47,7 @@ open class HostView @JvmOverloads constructor(
      */
     @Parcelize
     protected class InactiveChild(
-        val savedState: SparseArray<Parcelable>,
+        internal val savedState: SparseArray<Parcelable>,
     ) : Parcelable
 
     @Parcelize
@@ -67,8 +66,10 @@ open class HostView @JvmOverloads constructor(
         onEnd: () -> Unit,
         changes: () -> Unit,
     ) {
+        // Корректная последовательность: Применяем изменения -> Старт анимации -> Конец анимации
         if (transition == null) {
             changes.invoke()
+            onStart()
             onEnd()
             return
         }
@@ -86,77 +87,82 @@ open class HostView @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Удаляет из inactiveChildren состояния, которые не находятся в valid.
+     * Нужно чтобы не держать в памяти лишние сохраненные состояния View.
+     */
     protected fun validateInactive(valid: Collection<Child<*, *>>){
-        Log.d("SAVEDEB", "pre validate ${inactiveChildren.size}")
-        val validConfigurations = valid.asSequence().map { it.toParcelable() }.toSet()
+        val validId = valid.asSequence().map { it.id() }.toSet()
         val validChildren = HashMap<Parcelable, InactiveChild>()
-        inactiveChildren.forEach { (configuration, inactive) ->
-            if (configuration in validConfigurations){
-                validChildren[configuration] = inactive
+        inactiveChildren.forEach { (id, inactive) ->
+            if (id in validId){
+                validChildren[id] = inactive
             }
         }
-        Log.d("SAVEDEB", "post validate ${validChildren.size}")
         inactiveChildren.clear()
         inactiveChildren.putAll(validChildren)
     }
 
+    /**
+     * Создает новый активный экран.
+     * Вызывает создание View. Привязывает ЖЦ к родительскому ЖЦ.
+     * ЖЦ view = CREATED
+     */
     @OptIn(InternalDecomposeApi::class)
-    // Создаем новый активный child.
     protected fun <C : Any, T : ViewRender> createActiveChild(
         hostViewLifecycle: Lifecycle,
         child: Child.Created<C, T>
     ): ActiveChild<C, T> {
         val lifecycle = LifecycleRegistry()
-        val activeChildView = child.instance.createView(this,  MergedLifecycle(hostViewLifecycle, lifecycle))
-        lifecycle.create()
-        // Если было сохранено состояние, то восстанавливаем его.
-        Log.d("SAVEDEB", "createActive ${activeChildView.ids()}")
-        val activeChild = ActiveChild(
-            child,
-            lifecycle,
-            activeChildView
-        )
+        val view = child.instance.createView(this,  MergedLifecycle(hostViewLifecycle, lifecycle))
+        val activeChild = ActiveChild(child, lifecycle, view)
         lifecycle.doOnStart {
             restoreActive(activeChild)
         }
+        lifecycle.create()
         return activeChild
     }
 
+    /**
+     * Восстанавливает состояние ActiveChild.
+     * Если оно находится в inactiveChildren.
+     */
     private fun restoreActive(active: ActiveChild<*, *>){
-        Log.d("SAVEDEB", "restoreActive ${active.view.ids()}")
-        inactiveChildren.forEach { (id, child) ->
-            Log.d("SAVEDEB", "inactive ${id}")
-        }
-        val inactiveChild: InactiveChild? = inactiveChildren[active.parcelable]
+        val inactiveChild: InactiveChild? = inactiveChildren[active.id]
         if (inactiveChild != null) {
             active.view.restoreHierarchyState(inactiveChild.savedState)
         }
     }
 
+    /**
+     * Сохраняет состояние ActiveChild.
+     * Добавляет в inactiveChildren.
+     */
     protected fun addActiveToInactive(
         active: ActiveChild<*, *>?,
     ) {
-        //  Сохраняем состояние текущего экрана.
         if (active == null) return
-        val inactive = InactiveChild(
-            active.view.saveHierarchyState()
-        )
-        inactiveChildren[active.parcelable] = inactive
+        inactiveChildren[active.id] = InactiveChild(active.view.saveHierarchyState())
     }
 
-    private fun <C : Any, T : Any >Child<C, T>.toParcelable(): Parcelable {
-        return configuration as? Parcelable ?: AnyParcelable(configuration)
-    }
-
+    /**
+     * Переопределяем дефолтную реализацию сохранения состояния.
+     * Обычно сохраняются только состояние ViewGroup и всех вложенных View.
+     * HostView содержит только одну активную View, но также нужно сохранить состояния View,
+     * которые были прикреплены ранее и к которым пользователь может вернуться.
+     */
     override fun dispatchSaveInstanceState(container: SparseArray<Parcelable>) {
-        Log.d("SAVEDEB", "dispatchSaveInstanceState ${this.ids()}")
         if (id == NO_ID) return
         addActiveToInactive(currentChild)
         container.put(id, onSaveInstanceState())
     }
 
+    /**
+     * Переопределяем дефолтную реализацию восстановления состояния.
+     * Нужно восстановить состояние активной View не из container: SparseArray<Parcelable>,
+     * а из inactiveChildren.
+     */
     override fun dispatchRestoreInstanceState(container: SparseArray<Parcelable>) {
-        Log.d("SAVEDEB", "dispatchRestoreInstanceState ${this.ids()}")
         if (id == NO_ID) return
         onRestoreInstanceState(container[id])
         val active = currentChild ?: return
@@ -164,7 +170,6 @@ open class HostView @JvmOverloads constructor(
     }
 
     override fun onSaveInstanceState(): Parcelable? {
-        Log.d("SAVEDEB", "onSaveInstanceState ${this.ids()}")
         return SavedState(
             hostState = super.onSaveInstanceState(),
             childStates = inactiveChildren,
@@ -172,19 +177,10 @@ open class HostView @JvmOverloads constructor(
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
-        Log.d("SAVEDEB", "onRestoreInstanceState ${this.ids()}")
         val savedState = state as SavedState? ?: return
         super.onRestoreInstanceState(savedState.hostState)
         inactiveChildren.clear()
         inactiveChildren.putAll(savedState.childStates)
-    }
-
-    fun Int.ids(): String {
-        return if (this == NO_ID) "no-id" else resources.getResourceName(this)
-    }
-
-    fun View.ids(): String {
-        return if (id == NO_ID) "no-id" else this.resources.getResourceName(id)
     }
 
     private companion object {
@@ -192,6 +188,26 @@ open class HostView @JvmOverloads constructor(
         fun View.saveHierarchyState(): SparseArray<Parcelable> =
             SparseArray<Parcelable>()
                 .also(::saveHierarchyState)
+
+        /**
+         * Сопоставляет Child некоторый Parcelable, который является уникальным ключем.
+         * Под этим ключем сохраняется состояние View для Child, поэтому Parcelable.
+         *
+         * Нельзя использовать configuration.hashCode, поскольку дефолтная реализация
+         * возвращает ссылку на RAM память, следовательно может меняться при перезапуске процесса.
+         * А один и тотже объект может генерировать разный hashCode,
+         * который не будет равен сохраненному в память на диске.
+         *
+         * Нельзя использовать View.Id поскольку он не известен для Child.
+         *
+         * В случае если configuration не является Parcelable, используем hash и string.
+         * Надеемся что они переопределены и устойчивы к перезапуску процесса.
+         * С data class и data object проблем быть не должно.
+         * С class и object состояние может не восстанавиться.
+         */
+        fun <C : Any, T : Any >Child<C, T>.id(): Parcelable {
+            return configuration as? Parcelable ?: AnyParcelable(configuration)
+        }
     }
 
     @Parcelize
@@ -201,5 +217,4 @@ open class HostView @JvmOverloads constructor(
     ): Parcelable {
         constructor(any: Any): this(any.hashCode(), any.toString())
     }
-
 }

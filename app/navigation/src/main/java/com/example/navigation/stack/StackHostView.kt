@@ -21,6 +21,8 @@ class StackHostView @JvmOverloads constructor(
     /**
      * Подписывается на изменение ChildStack<C, T> и отрисовывает View.
      * T должен наследовать ViewRender.
+     * С должен быть Parcelable или data class, data object.
+     * Необходимо, поскольку является ключем для сохранения состояния View.
      *
      * @param stack Источник ChildStack
      * @param hostViewLifecycle Родительский ЖЦ в котором находится StackHostView.

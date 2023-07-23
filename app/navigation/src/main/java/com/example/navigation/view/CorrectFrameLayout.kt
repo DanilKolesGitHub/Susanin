@@ -11,7 +11,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
 /**
- * Копия FragmentContainerView. В нем испралены проблемы с анимациями.
+ * Копия FragmentContainerView. В нем испралены проблемы с анимациями и инсетами.
  * https://issuetracker.google.com/issues/37036000
  **/
 open class CorrectFrameLayout @JvmOverloads constructor(
@@ -22,10 +22,6 @@ open class CorrectFrameLayout @JvmOverloads constructor(
     private val disappearingChildren: MutableList<View> = mutableListOf()
     private val transitioningViews: MutableList<View> = mutableListOf()
     private var applyWindowInsetsListener: OnApplyWindowInsetsListener? = null
-
-    // Used to indicate whether the FragmentContainerView should override the default ViewGroup
-    // drawing order.
-    private var drawDisappearingViewsFirst = true
 
     override fun setLayoutTransition(transition: LayoutTransition?) {
         throw UnsupportedOperationException(
@@ -59,28 +55,26 @@ open class CorrectFrameLayout @JvmOverloads constructor(
     }
 
     override fun dispatchDraw(canvas: Canvas) {
-        if (drawDisappearingViewsFirst) {
-            disappearingChildren.forEach { child ->
-                super.drawChild(canvas, child, drawingTime)
-            }
+        disappearingChildren.forEach { child ->
+            super.drawChild(canvas, child, drawingTime)
         }
         super.dispatchDraw(canvas)
     }
 
     override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
-        if (drawDisappearingViewsFirst && disappearingChildren.isNotEmpty()) {
-            if (disappearingChildren.contains(child)) {
-                return false
-            }
+        if (disappearingChildren.contains(child)) {
+            return false
         }
         return super.drawChild(canvas, child, drawingTime)
     }
 
+    // https://issuetracker.google.com/issues/37036000
     override fun startViewTransition(view: View) {
         transitioningViews.add(view)
         super.startViewTransition(view)
     }
 
+    // https://issuetracker.google.com/issues/37036000
     override fun endViewTransition(view: View) {
         transitioningViews.remove(view)
         disappearingChildren.remove(view)
@@ -93,12 +87,12 @@ open class CorrectFrameLayout @JvmOverloads constructor(
         super.removeViewAt(index)
     }
 
-    override fun removeViewInLayout(view: View) {
+    override fun removeViewInLayout(view: View?) {
         addDisappearingFragmentView(view)
         super.removeViewInLayout(view)
     }
 
-    override fun removeView(view: View) {
+    override fun removeView(view: View?) {
         addDisappearingFragmentView(view)
         super.removeView(view)
     }
@@ -127,7 +121,8 @@ open class CorrectFrameLayout @JvmOverloads constructor(
         super.removeAllViewsInLayout()
     }
 
-    private fun addDisappearingFragmentView(v: View) {
+    private fun addDisappearingFragmentView(v: View?) {
+         v ?: return
         if (transitioningViews.contains(v)) {
             disappearingChildren.add(v)
         }
