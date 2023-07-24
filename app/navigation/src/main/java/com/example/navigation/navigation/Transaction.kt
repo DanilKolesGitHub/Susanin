@@ -4,17 +4,17 @@ import android.os.Handler
 import android.os.Looper
 
 class Transaction(
-    private val navigationNode: NavigationNode,
+    private val navigationManager: NavigationManager,
     private val stages: List<TransactionStage>
 ) {
 
     fun invoke() {
         Handler(Looper.getMainLooper()).post {
-            stages.forEach { it.invoke(navigationNode) }
+            stages.forEach { it.invoke(navigationManager) }
         }
     }
 }
 
 interface TransactionStage {
-    fun invoke(navigationNode: NavigationNode)
+    fun invoke(navigationManager: NavigationManager)
 }

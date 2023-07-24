@@ -9,7 +9,6 @@ import com.example.navigation.SearchScreenParams
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.navigation.transaction
 import com.example.navigation.router.ScreenRegister
-import com.example.navigation.screens.ScreenFactory
 import com.example.navigation.screens.ViewScreen
 import com.example.navigation.stack.parentOpenStack
 
@@ -36,9 +35,7 @@ class FeedScreen(context: ScreenContext, type: FeedScreenParams): ViewScreen<Fee
 }
 
 fun registerFeedScreens(register: ScreenRegister) {
-    register.registerFactory(FeedScreenParams::class, object : ScreenFactory<FeedScreenParams> {
-        override fun create(type: FeedScreenParams, context: ScreenContext): FeedScreen {
-            return FeedScreen(context, type)
-        }
-    })
+    register.registerFactory(FeedScreenParams::class) { context, type ->
+        FeedScreen(context, type)
+    }
 }

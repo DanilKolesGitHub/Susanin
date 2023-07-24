@@ -23,22 +23,22 @@ class TransactionBuilder {
     }
 
     private fun addStage(
-        command : (navigationNode: NavigationNode) -> Unit
+        command : (navigationManager: NavigationManager) -> Unit
     ) : TransactionBuilder {
         stages.add(object : TransactionStage {
-            override fun invoke(navigationNode: NavigationNode) {
-                command.invoke(navigationNode)
+            override fun invoke(navigationManager: NavigationManager) {
+                command.invoke(navigationManager)
             }
         })
         return this
     }
 
-    fun commit(navigationNode: NavigationNode) {
-        Transaction(navigationNode, stages).invoke()
+    fun commit(navigationManager: NavigationManager) {
+        Transaction(navigationManager, stages).invoke()
     }
 }
 
-fun NavigationNode.transaction(builder: TransactionBuilder.() -> Unit) {
+fun NavigationManager.transaction(builder: TransactionBuilder.() -> Unit) {
     val transactionBuilder = TransactionBuilder()
     transactionBuilder.builder()
     transactionBuilder.commit(this)

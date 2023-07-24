@@ -35,7 +35,7 @@ fun <Params: Parcelable, Instance: Any> NavigationContext.pages(
     tag: String = NavigationType.PAGES.name,
     factory: (params: Params, context: NavigationContext) -> Instance,
 ): Value<ChildPages<Params, Instance>> {
-    val navigationHolder = navigation.provideNavigation(tag) { pending ->
+    val navigationHolder = navigation.provideHolder(tag) { pending ->
         val pages = initialProvider()
         val pendingSelected: Params? = pending?.lastOrNull()
         val selected = pendingSelected?.let { pages.indexOf(it) } ?: initialSelection

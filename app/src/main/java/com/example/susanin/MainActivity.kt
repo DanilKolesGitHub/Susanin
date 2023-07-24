@@ -12,7 +12,7 @@ import com.example.feed.registerFeedScreens
 import com.example.navigation.MainScreenParams
 import com.example.navigation.context.DefaultNavigationContext
 import com.example.navigation.context.DefaultScreenContext
-import com.example.navigation.navigation.NavigationNode
+import com.example.navigation.navigation.NavigationManager
 import com.example.navigation.router.Router
 import com.example.navigation.router.ScreenRegister
 import com.example.search.registerSearchScreens
@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         registerSearchScreens(register)
         registerMainScreens(register)
 
-        val rootNode = NavigationNode(MainScreenParams, null)
+        val rootNode = NavigationManager(MainScreenParams, null)
         val router = Router(register, rootNode)
         val mainScreen = MainScreen(
             DefaultScreenContext(

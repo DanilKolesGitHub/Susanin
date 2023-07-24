@@ -30,7 +30,7 @@ fun <Params: Parcelable, Instance: Any> NavigationContext.stack(
     tag: String = NavigationType.STACK.name,
     factory: (params: Params, context: NavigationContext) -> Instance,
 ): Value<ChildStack<Params, Instance>> {
-    val navigationHolder = navigation.provideNavigation(tag) { pending ->
+    val navigationHolder = navigation.provideHolder(tag) { pending ->
         val pendingStack: List<Params>? = pending
         val initialScreens = when {
             pendingStack.isNullOrEmpty() -> initialProvider()

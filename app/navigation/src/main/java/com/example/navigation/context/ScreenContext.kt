@@ -1,17 +1,17 @@
 package com.example.navigation.context
 
 import com.arkivanov.decompose.ComponentContext
-import com.example.navigation.navigation.NavigationNode
+import com.example.navigation.navigation.NavigationManager
 import com.example.navigation.router.Router
 
 
 interface NavigationContext : ComponentContext {
-    val navigation: NavigationNode
+    val navigation: NavigationManager
 }
 
 class DefaultNavigationContext (
     componentContext: ComponentContext,
-    override val navigation: NavigationNode,
+    override val navigation: NavigationManager,
 ): NavigationContext, ComponentContext by componentContext
 
 interface ScreenContext : NavigationContext{

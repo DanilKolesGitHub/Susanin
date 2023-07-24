@@ -1,6 +1,8 @@
 package com.example.navigation.router
 
 import com.example.navigation.NavigationType
+import com.example.navigation.context.ScreenContext
+import com.example.navigation.screens.Screen
 import com.example.navigation.screens.ScreenFactory
 import com.example.navigation.screens.ScreenKey
 import com.example.navigation.screens.ScreenParams
@@ -17,6 +19,20 @@ class ScreenRegister {
             return
         }
         factoryMap[key] = factory as ScreenFactory<ScreenParams>
+    }
+
+    inline fun <reified P> registerFactory(
+        type: KClass<P>,
+        noinline factory: (context: ScreenContext, params: P) -> Screen<P>,
+    ) where P : ScreenParams {
+        registerFactory(
+            type,
+            object : ScreenFactory<P> {
+                override fun create(params: P, context: ScreenContext): Screen<P> {
+                    return factory(context, params)
+                }
+            },
+        )
     }
 
     fun <T : ScreenParams> registerDefaultParams(params: T) {

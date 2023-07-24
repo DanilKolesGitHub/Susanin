@@ -27,7 +27,7 @@ fun <Params: Parcelable, Instance: Any> NavigationContext.slot(
     tag: String = NavigationType.SLOT.name,
     factory: (params: Params, context: NavigationContext) -> Instance,
 ): Value<ChildSlot<Params, Instance>> {
-    val navigationHolder = navigation.provideNavigation(tag) { pending ->
+    val navigationHolder = navigation.provideHolder(tag) { pending ->
         val initialScreen = when {
             pending.isNullOrEmpty() -> initialProvider()
             else -> pending.lastOrNull()
