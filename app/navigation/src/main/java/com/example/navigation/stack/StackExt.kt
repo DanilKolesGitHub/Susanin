@@ -6,15 +6,15 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
 import com.example.navigation.NavigationType
 import com.example.navigation.context.NavigationContext
-import com.example.navigation.navigation.TransactionBuilder
+import com.example.navigation.transaction.TransactionBuilder
 import com.example.navigation.navigation.children
 
-fun <Params: Parcelable, Instance: Any> NavigationContext.stack(
+fun <Params : Parcelable, Instance : Any> NavigationContext<Params>.stack(
     initial: Params,
     addInitial: Boolean = false,
     handleBackButton: Boolean = true,
     tag: String = NavigationType.STACK.name,
-    factory: (params: Params, context: NavigationContext) -> Instance,
+    factory: (params: Params, context: NavigationContext<Params>) -> Instance,
 ) = stack(
     initialProvider = { listOf(initial) },
     addInitial = addInitial,
@@ -23,19 +23,21 @@ fun <Params: Parcelable, Instance: Any> NavigationContext.stack(
     factory,
 )
 
-fun <Params: Parcelable, Instance: Any> NavigationContext.stack(
+fun <Params : Parcelable, Instance : Any> NavigationContext<Params>.stack(
     initialProvider: () -> List<Params>,
     addInitial: Boolean = false,
     handleBackButton: Boolean = true,
     tag: String = NavigationType.STACK.name,
-    factory: (params: Params, context: NavigationContext) -> Instance,
+    factory: (params: Params, context: NavigationContext<Params>) -> Instance,
 ): Value<ChildStack<Params, Instance>> {
     val navigationHolder = navigation.provideHolder(tag) { pending ->
-        val pendingStack: List<Params>? = pending
-        val initialScreens = when {
-            pendingStack.isNullOrEmpty() -> initialProvider()
-            addInitial -> initialProvider() + pendingStack
-            else -> pendingStack
+        val initialScreens = if (pending != null) {
+            if (addInitial)
+                initialProvider() + pending
+            else
+                listOf(pending)
+        } else {
+            initialProvider()
         }
         StackNavigationHolder(tag, initialScreens)
     }
@@ -43,7 +45,7 @@ fun <Params: Parcelable, Instance: Any> NavigationContext.stack(
         navigationHolder = navigationHolder,
         handleBackButton = handleBackButton,
         tag = tag,
-        stateMapper =  { _, children ->
+        stateMapper = { _, children ->
             @Suppress("UNCHECKED_CAST")
             val createdChildren = children as List<Child.Created<Params, Instance>>
 
@@ -55,8 +57,3 @@ fun <Params: Parcelable, Instance: Any> NavigationContext.stack(
         factory,
     )
 }
-
-fun <P: Any> TransactionBuilder.openStack(params: P) = open(params, NavigationType.STACK.name)
-fun <P: Any> TransactionBuilder.closeStack(params: P) = close(params, NavigationType.STACK.name)
-fun <P: Any> TransactionBuilder.parentOpenStack(params: P) = parentOpen(params, NavigationType.STACK.name)
-fun <P: Any> TransactionBuilder.parentCloseStack(params: P) = parentClose(params, NavigationType.STACK.name)

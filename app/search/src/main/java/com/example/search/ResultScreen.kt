@@ -5,10 +5,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.example.navigation.ResultScreenParams
+import com.example.navigation.VideoScreenParams
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.navigation.transaction
+import com.example.navigation.transaction.transaction
 import com.example.navigation.screens.ViewScreen
-import com.example.navigation.stack.parentOpenStack
 
 class ResultScreen(context: ScreenContext, type: ResultScreenParams): ViewScreen<ResultScreenParams>(context, type) {
 
@@ -28,7 +28,7 @@ class ResultScreen(context: ScreenContext, type: ResultScreenParams): ViewScreen
     }
 
     private fun navigate(resultScreenParams: ResultScreenParams) {
-        transaction { parentOpenStack(resultScreenParams) }
+        transaction { open(VideoScreenParams) }
     }
 
 }

@@ -10,9 +10,9 @@ import com.example.navigation.TabScreenParams
 import com.example.navigation.TreeTabScreenParams
 import com.example.navigation.VideoTabScreenParams
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.navigation.transaction
+import com.example.navigation.navigation.NavigationRegister
+import com.example.navigation.transaction.transaction
 import com.example.navigation.pages.PagesHostView
-import com.example.navigation.pages.openPages
 import com.example.navigation.router.ScreenRegister
 import com.example.navigation.screens.ScreenFactory
 import com.example.navigation.screens.ScreenParams
@@ -69,12 +69,15 @@ class TabScreen(context: ScreenContext, type: TabScreenParams): ViewScreen<TabSc
 
     private fun navigate(screen: ScreenParams) {
         transaction {
-            openPages(screen)
+            open(screen)
         }
     }
 }
 
-fun registerTabScreens(register: ScreenRegister) {
+fun registerTabScreens(
+    register: ScreenRegister,
+    navigationRegister: NavigationRegister<ScreenParams>
+) {
     register.registerFactory(
         TabScreenParams::class,
         object : ScreenFactory<TabScreenParams> {
@@ -109,5 +112,15 @@ fun registerTabScreens(register: ScreenRegister) {
                 return TreeTabScreen(context, screenType)
             }
         }
+    )
+    navigationRegister.registerDefault(TabScreenParams)
+    navigationRegister.registerDefault(FeedTabScreenParams)
+    navigationRegister.registerDefault(VideoTabScreenParams)
+    navigationRegister.registerDefault(TreeTabScreenParams)
+    navigationRegister.registerPagesNavigation(
+        TabScreenParams::class,
+        FeedTabScreenParams::class,
+        VideoTabScreenParams::class,
+        TreeTabScreenParams::class,
     )
 }

@@ -5,12 +5,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.example.navigation.FeedScreenParams
+import com.example.navigation.FeedTabScreenParams
 import com.example.navigation.SearchScreenParams
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.navigation.transaction
+import com.example.navigation.navigation.NavigationRegister
+import com.example.navigation.transaction.transaction
 import com.example.navigation.router.ScreenRegister
+import com.example.navigation.screens.ScreenParams
 import com.example.navigation.screens.ViewScreen
-import com.example.navigation.stack.parentOpenStack
 
 class FeedScreen(context: ScreenContext, type: FeedScreenParams): ViewScreen<FeedScreenParams>(context, type) {
 
@@ -29,13 +31,22 @@ class FeedScreen(context: ScreenContext, type: FeedScreenParams): ViewScreen<Fee
     }
 
     private fun navigate() {
-        transaction { parentOpenStack(SearchScreenParams) }
+        transaction { open(SearchScreenParams) }
     }
 
 }
 
-fun registerFeedScreens(register: ScreenRegister) {
+fun registerFeedScreens(
+    register: ScreenRegister,
+    navigationRegister: NavigationRegister<ScreenParams>
+) {
     register.registerFactory(FeedScreenParams::class) { context, type ->
         FeedScreen(context, type)
     }
+
+    navigationRegister.registerStackNavigation(
+        FeedTabScreenParams::class,
+        FeedScreenParams::class,
+        SearchScreenParams::class
+    )
 }

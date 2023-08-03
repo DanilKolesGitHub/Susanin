@@ -8,9 +8,8 @@ import android.widget.EditText
 import android.widget.TextView
 import com.example.navigation.DialogScreenParams
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.navigation.transaction
+import com.example.navigation.transaction.transaction
 import com.example.navigation.screens.ViewScreen
-import com.example.navigation.slot.parentCloseSlot
 
 class DialogScreen(context: ScreenContext, type: DialogScreenParams): ViewScreen<DialogScreenParams>(context, type) {
 
@@ -32,9 +31,9 @@ class DialogScreen(context: ScreenContext, type: DialogScreenParams): ViewScreen
     }
 
     private fun navigate(resultScreenParams: DialogScreenParams) {
-        transaction {
-            parentCloseSlot(params)
-        }
+//        transaction {
+//            parentCloseSlot(params)
+//        }
     }
 
 }

@@ -12,9 +12,12 @@ import com.example.feed.registerFeedScreens
 import com.example.navigation.MainScreenParams
 import com.example.navigation.context.DefaultNavigationContext
 import com.example.navigation.context.DefaultScreenContext
+import com.example.navigation.navigation.NavigationDispatcher
 import com.example.navigation.navigation.NavigationManager
+import com.example.navigation.navigation.NavigationRegister
 import com.example.navigation.router.Router
 import com.example.navigation.router.ScreenRegister
+import com.example.navigation.screens.ScreenParams
 import com.example.search.registerSearchScreens
 import com.example.tree.registerTreeScreens
 import com.example.video.registerVideoScreens
@@ -27,20 +30,24 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val register = ScreenRegister()
-        registerTabScreens(register)
-        registerFeedScreens(register)
-        registerVideoScreens(register)
-        registerTreeScreens(register)
-        registerSearchScreens(register)
-        registerMainScreens(register)
+        val navigationRegister = NavigationRegister<ScreenParams>()
+        registerTabScreens(register, navigationRegister)
+        registerFeedScreens(register, navigationRegister)
+        registerVideoScreens(register, navigationRegister)
+        registerTreeScreens(register, navigationRegister)
+        registerSearchScreens(register, navigationRegister)
+        registerMainScreens(register, navigationRegister)
 
-        val rootNode = NavigationManager(MainScreenParams, null)
-        val router = Router(register, rootNode)
+        val rootManager = NavigationManager(MainScreenParams, null, NavigationDispatcher(
+            navigationRegister.navigation,
+            navigationRegister.default,
+        ))
+        val router = Router(register)
         val mainScreen = MainScreen(
             DefaultScreenContext(
                 DefaultNavigationContext(
                     defaultComponentContext(),
-                    rootNode
+                    rootManager
                 ),
                 router,
             )

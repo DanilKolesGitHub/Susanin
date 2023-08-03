@@ -12,7 +12,7 @@ import com.example.navigation.stack.stack
 
 private fun ScreenContext.defaultFactory(
     screenParams: ScreenParams,
-    context: NavigationContext
+    context: NavigationContext<ScreenParams>
 ) = router.screenFactory.create(screenParams, DefaultScreenContext(context, router))
 
 fun ScreenContext.pages(
@@ -73,11 +73,12 @@ fun ScreenContext.slot(
 
 fun ScreenContext.stack(
     initialScreen: ScreenParams,
+    addInitial: Boolean = false,
     handleBackButton: Boolean = true,
     tag: String = NavigationType.STACK.name,
 ) = stack(
     initial = initialScreen,
-    addInitial = false,
+    addInitial = addInitial,
     handleBackButton = handleBackButton,
     tag = tag,
     factory = ::defaultFactory,
@@ -85,11 +86,12 @@ fun ScreenContext.stack(
 
 fun ScreenContext.stack(
     initialProvider: () -> List<ScreenParams>,
+    addInitial: Boolean = false,
     handleBackButton: Boolean = true,
     tag: String = NavigationType.STACK.name,
 ) = stack(
     initialProvider = initialProvider,
-    addInitial = false,
+    addInitial = addInitial,
     handleBackButton = handleBackButton,
     tag = tag,
     factory = ::defaultFactory,

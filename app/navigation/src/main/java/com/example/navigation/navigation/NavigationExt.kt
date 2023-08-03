@@ -13,12 +13,12 @@ import com.arkivanov.essenty.parcelable.consumeRequired
 import com.example.navigation.context.DefaultNavigationContext
 import com.example.navigation.context.NavigationContext
 
-internal fun <Params: Any, State: NavState<Params>, Instance: Any, Ui: Any> NavigationContext.children(
+internal fun <Params: Any, State: NavState<Params>, Instance: Any, Ui: Any> NavigationContext<Params>.children(
     navigationHolder: NavigationHolder<Params, State>,
     handleBackButton: Boolean,
     tag: String,
     stateMapper: (state: State, children: List<Child<Params, Instance>>) -> Ui,
-    factory: (params: Params, context: NavigationContext) -> Instance,
+    factory: (params: Params, context: NavigationContext<Params>) -> Instance,
     saveState: (state: State) -> ParcelableContainer?,
     restoreState: (container: ParcelableContainer) -> State?,
 ): Value<Ui> {
@@ -53,12 +53,12 @@ internal fun <Params: Any, State: NavState<Params>, Instance: Any, Ui: Any> Navi
     )
 }
 
-internal inline fun <Params: Parcelable, reified State, Instance: Any, Ui: Any> NavigationContext.children(
+internal inline fun <Params: Parcelable, reified State, Instance: Any, Ui: Any> NavigationContext<Params>.children(
     navigationHolder: NavigationHolder<Params, State>,
     handleBackButton: Boolean,
     tag: String,
     noinline stateMapper: (state: State, children: List<Child<Params, Instance>>) -> Ui,
-    noinline factory: (params: Params, context: NavigationContext) -> Instance,
+    noinline factory: (params: Params, context: NavigationContext<Params>) -> Instance,
 ): Value<Ui> where State : NavState<Params>, State : Parcelable =
     children(
         navigationHolder = navigationHolder,

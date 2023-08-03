@@ -8,9 +8,8 @@ import android.widget.EditText
 import com.example.navigation.InputScreenParams
 import com.example.navigation.ResultScreenParams
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.navigation.transaction
+import com.example.navigation.transaction.transaction
 import com.example.navigation.screens.ViewScreen
-import com.example.navigation.stack.parentOpenStack
 
 class InputScreen(context: ScreenContext, type: InputScreenParams): ViewScreen<InputScreenParams>(context, type) {
 
@@ -31,7 +30,7 @@ class InputScreen(context: ScreenContext, type: InputScreenParams): ViewScreen<I
     }
 
     private fun navigate(resultScreenParams: ResultScreenParams) {
-        transaction { parentOpenStack(resultScreenParams) }
+        transaction { open(resultScreenParams) }
     }
 
 }

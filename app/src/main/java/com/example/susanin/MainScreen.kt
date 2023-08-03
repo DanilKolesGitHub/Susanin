@@ -8,6 +8,7 @@ import com.example.navigation.MainScreenParams
 import com.example.navigation.ResultScreenParams
 import com.example.navigation.TabScreenParams
 import com.example.navigation.context.ScreenContext
+import com.example.navigation.navigation.NavigationRegister
 import com.example.navigation.router.ScreenRegister
 import com.example.navigation.screens.*
 import com.example.navigation.slot.SlotHostView
@@ -21,7 +22,7 @@ class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, 
         TabScreenParams
     )
 
-    val slot = slot(DialogScreenParams("hello"))
+    val slot = slot(null)//DialogScreenParams("hello"))
 
     override fun onCreateView(layoutInflater: LayoutInflater, parent: ViewGroup): View {
         return layoutInflater.inflate(R.layout.activity_main, parent, false)
@@ -35,8 +36,10 @@ class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, 
     }
 }
 
-fun registerMainScreens(register: ScreenRegister) {
-    register.registerDefaultParams(MainScreenParams)
+fun registerMainScreens(
+    register: ScreenRegister,
+    navigationRegister: NavigationRegister<ScreenParams>
+) {
     register.registerFactory(
         MainScreenParams::class,
         object : ScreenFactory<MainScreenParams> {
@@ -59,5 +62,11 @@ fun registerMainScreens(register: ScreenRegister) {
             }
         }
     )
-    register.registerStackNavigation(MainScreenParams::class, ResultScreenParams::class)
+    navigationRegister.registerStackNavigation(
+        MainScreenParams::class,
+        TabScreenParams::class)
+
+    navigationRegister.registerSlotNavigation(
+        MainScreenParams::class,
+        DialogScreenParams::class)
 }

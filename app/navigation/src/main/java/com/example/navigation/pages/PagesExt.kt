@@ -5,17 +5,17 @@ import com.arkivanov.decompose.router.pages.ChildPages
 import com.arkivanov.decompose.value.Value
 import com.example.navigation.NavigationType
 import com.example.navigation.context.NavigationContext
-import com.example.navigation.navigation.TransactionBuilder
+import com.example.navigation.transaction.TransactionBuilder
 import com.example.navigation.navigation.children
 
-fun <Params: Parcelable, Instance: Any> NavigationContext.pages(
+fun <Params: Parcelable, Instance: Any> NavigationContext<Params>.pages(
     initialPages: List<Params>,
     initialSelection: Int,
     handleBackButton: Boolean = true,
     closeBehaviour: CloseBehaviour = CloseBehaviour.Circle,
     backBehaviour: BackBehaviour = BackBehaviour.Circle,
     tag: String = NavigationType.PAGES.name,
-    factory: (params: Params, context: NavigationContext) -> Instance,
+    factory: (params: Params, context: NavigationContext<Params>) -> Instance,
 ) = pages(
     { initialPages },
     initialSelection,
@@ -26,18 +26,18 @@ fun <Params: Parcelable, Instance: Any> NavigationContext.pages(
     factory
 )
 
-fun <Params: Parcelable, Instance: Any> NavigationContext.pages(
+fun <Params: Parcelable, Instance: Any> NavigationContext<Params>.pages(
     initialProvider: () -> List<Params>,
     initialSelection: Int,
     handleBackButton: Boolean = true,
     closeBehaviour: CloseBehaviour,
     backBehaviour: BackBehaviour,
     tag: String = NavigationType.PAGES.name,
-    factory: (params: Params, context: NavigationContext) -> Instance,
+    factory: (params: Params, context: NavigationContext<Params>) -> Instance,
 ): Value<ChildPages<Params, Instance>> {
     val navigationHolder = navigation.provideHolder(tag) { pending ->
         val pages = initialProvider()
-        val pendingSelected: Params? = pending?.lastOrNull()
+        val pendingSelected: Params? = pending
         val selected = pendingSelected?.let { pages.indexOf(it) } ?: initialSelection
         PagesNavigationHolder(
             tag,
@@ -86,8 +86,3 @@ enum class CloseBehaviour {
             Circle -> PagesNavigation.CloseBehaviour.Circle
         }
 }
-
-fun <P: Any> TransactionBuilder.openPages(params: P) = open(params, NavigationType.PAGES.name)
-fun <P: Any> TransactionBuilder.closePages(params: P) = close(params, NavigationType.PAGES.name)
-fun <P: Any> TransactionBuilder.parentOpenPages(params: P) = parentOpen(params, NavigationType.PAGES.name)
-fun <P: Any> TransactionBuilder.parentClosePages(params: P) = parentClose(params, NavigationType.PAGES.name)
