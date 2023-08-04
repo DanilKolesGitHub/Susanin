@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun TreeView(node: Node) {
+fun TreeView(uiNode: UiNode) {
     Column(Modifier
         .fillMaxWidth()
         .wrapContentHeight()
@@ -18,12 +18,12 @@ fun TreeView(node: Node) {
         .background(color = Color(218,75,31,50))) {
         Text(
             color = Color.DarkGray,
-            text = node.name,
-            fontSize = 32.sp,
+            text = uiNode.name,
+            fontSize = 26.sp,
             modifier = Modifier.wrapContentSize().padding(start = 16.dp, top = 4.dp, bottom = 4.dp)
         )
-        node.children.forEach {
-            TreeView(node = it)
+        uiNode.children.forEach {
+            TreeView(uiNode = it)
         }
     }
 }

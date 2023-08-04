@@ -10,7 +10,7 @@ class NavigationDispatcher<P : Any>(
     private val default: Map<Type<P>, P>,
 ) {
 
-    private val tree: Tree<Type<P>>
+    internal val tree: Tree<Type<P>>
 
     init {
         val dependencyMap =
@@ -27,13 +27,6 @@ class NavigationDispatcher<P : Any>(
     internal fun defaultParam(type: Type<P>): P? {
         return default[type]
     }
-//
-//    private fun findRegisteredChildren(host: KClass<P>, tag: String): Set<KClass<P>> {
-//        val registeredScreensInHost = registeredHost[host]
-//            ?: throw IllegalStateException("Host $host has not registeredHost screen")
-//        return registeredScreensInHost[tag]
-//            ?: throw IllegalStateException("Host $host has not registeredHost screen for $tag")
-//    }
 
     internal fun findTagForChild(host: Type<P>, child: Type<P>): String {
         val registeredScreensInHost = registeredHost[host]

@@ -14,22 +14,12 @@ internal class Path<P : Any> {
             .filterIsInstance<CertainStep<P>>()
             .associateBy(CertainStep<P>::type, CertainStep<P>::param)
 
-    fun addStep(param: P) {
+    fun add(param: P) {
         steps.add(CertainStep(param))
     }
 
-    fun addStep(type: KClass<P>) {
+    fun add(type: KClass<out P>) {
         steps.add(VagueStep(type))
-    }
-
-    operator fun get(type: KClass<P>): P? {
-        var result: P? = null
-        for (step in steps) {
-            if (step.type == type && step is CertainStep) {
-                result = step.param
-            }
-        }
-        return result
     }
 }
 
@@ -45,5 +35,5 @@ private data class CertainStep<P : Any>(
 }
 
 private data class VagueStep<P : Any>(
-    override val type: KClass<P>
+    override val type: KClass<out P>
 ) : Step<P>

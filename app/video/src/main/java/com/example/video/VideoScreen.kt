@@ -30,7 +30,9 @@ class VideoScreen(context: ScreenContext, screenType: VideoScreenParams): ViewSc
     }
 
     private fun navigate() {
-        transaction { open(ResultScreenParams("qwerty")) }
+        transaction {
+            inside(FeedTabScreenParams::class).open(SearchScreenParams)
+        }
     }
 
 }
@@ -47,6 +49,7 @@ fun registerVideoScreens(
 
     navigationRegister.registerStackNavigation(
         VideoTabScreenParams::class,
-        VideoScreenParams::class
+        VideoScreenParams::class,
+        SearchScreenParams::class
     )
 }

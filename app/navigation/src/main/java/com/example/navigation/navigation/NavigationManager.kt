@@ -12,6 +12,8 @@ class NavigationManager<P : Any>(
 
     val children = HashMap<P, NavigationManager<P>>()
 
+    val tree = dispatcher.tree
+
     internal fun provideChild(childParams: P): NavigationManager<P> {
         return children.getOrPut(childParams) { NavigationManager(childParams, this, dispatcher) }
     }

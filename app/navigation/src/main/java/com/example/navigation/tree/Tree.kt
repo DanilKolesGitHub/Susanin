@@ -2,9 +2,9 @@ package com.example.navigation.tree
 
 import java.util.LinkedList
 
-internal class Tree<T>(dependencyMap: Map<T, Collection<T>>) {
+class Tree<T>(dependencyMap: Map<T, Collection<T>>) {
 
-    private val root: Node<T>
+    val root: Node<T>
 
     init {
         root = createNode(
@@ -14,7 +14,7 @@ internal class Tree<T>(dependencyMap: Map<T, Collection<T>>) {
         )
     }
 
-    private data class Node<T>(
+    data class Node<T>(
         val data: T,
         val parent: Node<T>?,
         val children: Map<T, Node<T>>,

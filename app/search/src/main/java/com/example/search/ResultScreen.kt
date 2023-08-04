@@ -24,16 +24,6 @@ class ResultScreen(context: ScreenContext, type: ResultScreenParams): ViewScreen
     override fun onViewCreated(container: View) {
         val text: TextView = container.findViewById(R.id.result)
         text.text = params.result
-        text.setOnClickListener {
-            navigate(ResultScreenParams(params.result+"0"))
-        }
-    }
-
-    private fun navigate(resultScreenParams: ResultScreenParams) {
-        transaction {
-            close(SearchScreenParams)
-            open(VideoScreenParams)
-        }
     }
 
 }

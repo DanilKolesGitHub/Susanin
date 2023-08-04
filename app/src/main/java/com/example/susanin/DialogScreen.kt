@@ -24,16 +24,15 @@ class DialogScreen(context: ScreenContext, type: DialogScreenParams): ViewScreen
         val input: EditText = container.findViewById(R.id.dialog_input)
         val result: Button = container.findViewById(R.id.dialog_result)
         input.setText(params.result, TextView.BufferType.EDITABLE)
-
         result.setOnClickListener {
-            navigate(DialogScreenParams(input.text.toString()))
+            navigate()
         }
     }
 
-    private fun navigate(resultScreenParams: DialogScreenParams) {
-//        transaction {
-//            parentCloseSlot(params)
-//        }
+    private fun navigate() {
+        transaction {
+            close(params)
+        }
     }
 
 }

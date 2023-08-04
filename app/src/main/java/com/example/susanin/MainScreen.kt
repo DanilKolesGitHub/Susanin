@@ -22,7 +22,7 @@ class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, 
         TabScreenParams
     )
 
-    val slot = slot(null)//DialogScreenParams("hello"))
+    val slot = slot(DialogScreenParams("hello"))
 
     override fun onCreateView(layoutInflater: LayoutInflater, parent: ViewGroup): View {
         return layoutInflater.inflate(R.layout.activity_main, parent, false)
