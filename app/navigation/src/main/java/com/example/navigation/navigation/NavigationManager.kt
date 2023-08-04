@@ -16,6 +16,10 @@ class NavigationManager<P : Any>(
         return children.getOrPut(childParams) { NavigationManager(childParams, this, dispatcher) }
     }
 
+    internal fun findChild(childParams: P): NavigationManager<P>? {
+        return children.get(childParams)
+    }
+
     internal fun removeChild(childParams: P) {
         val child = children.remove(childParams)
         child?.clear()
@@ -69,14 +73,14 @@ class NavigationManager<P : Any>(
     }
 
     internal fun open(path: Path<P>) {
-        val targetPath = dispatcher.preparePath(path, branch)
+        val fullPath = dispatcher.preparePath(path, branch)
         var current = root
         val pathParams = path.params
         val operations = LinkedList<() -> Unit>()
-        targetPath.forEachIndexed { index, currentType ->
-            if (index >= targetPath.size - 1) return@forEachIndexed
+        fullPath.forEachIndexed { index, currentType ->
+            if (index >= fullPath.size - 1) return@forEachIndexed
             if (current.params::class != currentType) throw IllegalStateException("Illegal type $currentType for current ${current.params}")
-            val childType = targetPath[index + 1]
+            val childType = fullPath[index + 1]
             val childParam = pathParams[childType] ?:
                             current.childParam(childType) ?:
                             dispatcher.defaultParam(childType) ?:
@@ -93,6 +97,31 @@ class NavigationManager<P : Any>(
             current = child
         }
         operations.forEach { it.invoke() }
+    }
+
+    internal fun close(path: Path<P>) {
+        val fullPath = dispatcher.preparePath(path, branch)
+        var current = root
+        val pathParams = path.params
+        var operation: () -> Unit = {}
+        fullPath.forEachIndexed { index, currentType ->
+            if (index >= fullPath.size - 1) return@forEachIndexed
+            if (current.params::class != currentType) throw IllegalStateException("Illegal type $currentType for current ${current.params}")
+            val childType = fullPath[index + 1]
+            val childParam = pathParams[childType] ?:
+                            current.childParam(childType) ?:
+                            dispatcher.defaultParam(childType) ?:
+                            throw IllegalStateException("Can not find params fot type $childType")
+            val child = current.findChild(childParam) ?: return
+
+            val tag = dispatcher.findTagForChild(currentType, childType)
+            val navigationHolder = current.findHolder(tag) ?: return
+            if (index == fullPath.size - 2) {
+                operation = { navigationHolder.navigation.close(childParam) }
+            }
+            current = child
+        }
+        operation.invoke()
     }
 
     private fun childParam(type: Type<P>): P? {

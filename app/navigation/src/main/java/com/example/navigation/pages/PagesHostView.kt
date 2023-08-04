@@ -94,14 +94,14 @@ class PagesHostView @JvmOverloads constructor(
                     onEnd = {
                         currentChild.lifecycle.destroy()
                         activeChild.lifecycle.resume()
-                        this.currentChild = activeChild
-                        this.currentPages = pages
                     },
                     changes = {
                         removeView(currentChild.view)
                         addView(activeChild.view)
                     }
                 )
+                this.currentChild = activeChild
+                this.currentPages = pages
             }
         }
         validateInactive(pages)

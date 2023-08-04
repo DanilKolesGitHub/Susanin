@@ -3,8 +3,6 @@ package com.example.search
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.example.navigation.FeedScreenParams
-import com.example.navigation.FeedTabScreenParams
 import com.example.navigation.InputScreenParams
 import com.example.navigation.ResultScreenParams
 import com.example.navigation.SearchScreenParams

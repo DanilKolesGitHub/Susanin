@@ -2,6 +2,7 @@ package com.example.navigation.stack
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import androidx.transition.Transition
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.ObserveLifecycleMode
@@ -57,6 +58,9 @@ class StackHostView @JvmOverloads constructor(
         @Suppress("UNCHECKED_CAST")
         val currentChild = currentChild as ActiveChild<C, T>?
 
+        Log.d("SERDEB", this.hashCode().toString())
+        stack.items.forEach { Log.d("SERDEB", it.toString()) }
+
         if (currentChild?.child?.configuration != stack.active.configuration) {
             // Создаем новый активный экран.
             val activeChild = createActiveChild(hostViewLifecycle, stack.active)
@@ -71,7 +75,6 @@ class StackHostView @JvmOverloads constructor(
                     // Если текущий экран остался в stack сохраняем его состояние.
                     addActiveToInactive(currentChild)
                 }
-                validateInactive(stack)
                 // Новый экран был в стеке, поэтому проигрываем анимацию текущего в обратную сторону.
                 val activeFromStack = isInBackStack(currentStack, activeChild)
                 // Анимируем изменения. Или нет если нет анимации.
@@ -85,14 +88,14 @@ class StackHostView @JvmOverloads constructor(
                     onEnd = {
                         currentChild.lifecycle.destroy()
                         activeChild.lifecycle.resume()
-                        this.currentChild = activeChild
-                        this.currentStack = stack
                     },
                     changes = {
                         removeView(currentChild.view)
                         addView(activeChild.view)
                     }
                 )
+                this.currentChild = activeChild
+                this.currentStack = stack
             }
         }
         validateInactive(stack)

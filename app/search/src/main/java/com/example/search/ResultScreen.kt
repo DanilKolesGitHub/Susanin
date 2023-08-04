@@ -4,7 +4,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.example.navigation.FeedTabScreenParams
 import com.example.navigation.ResultScreenParams
+import com.example.navigation.SearchScreenParams
 import com.example.navigation.VideoScreenParams
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.transaction.transaction
@@ -28,7 +30,10 @@ class ResultScreen(context: ScreenContext, type: ResultScreenParams): ViewScreen
     }
 
     private fun navigate(resultScreenParams: ResultScreenParams) {
-        transaction { open(VideoScreenParams) }
+        transaction {
+            close(SearchScreenParams)
+            open(VideoScreenParams)
+        }
     }
 
 }

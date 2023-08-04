@@ -14,6 +14,13 @@ class TransactionBuilder<P : Any> {
         it.open(path)
     }
 
+    fun close(params: P) = addStage {
+        val path = Path<P>().apply {
+            addStep(params)
+        }
+        it.close(path)
+    }
+
     private fun addStage(
         command: (navigationManager: NavigationManager<P>) -> Unit
     ): TransactionBuilder<P> {

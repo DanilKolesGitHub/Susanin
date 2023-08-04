@@ -82,14 +82,14 @@ class SlotHostView @JvmOverloads constructor(
                 onEnd = {
                     currentChild?.lifecycle?.destroy()
                     activeChild?.lifecycle?.resume()
-                    this.currentChild = activeChild
-                    this.currentSlot = slot
                 },
                 changes = {
                     currentChild?.view?.let(::removeView)
                     activeChild?.view?.let(::addView)
                 }
             )
+            this.currentChild = activeChild
+            this.currentSlot = slot
         }
         validateInactive(slot)
     }

@@ -22,23 +22,6 @@ internal class Path<P : Any> {
         steps.add(VagueStep(type))
     }
 
-    fun foreachType(action: (KClass<out P>) -> Unit) {
-        for (step in steps)
-            action(step.type)
-    }
-
-    fun foreach(
-        default: Map<KClass<out P>, P>,
-        action: (P) -> Unit
-    ) {
-        for (step in steps) {
-            when (step) {
-                is CertainStep -> action(step.param)
-                is VagueStep -> action(default[step.type]!!)
-            }
-        }
-    }
-
     operator fun get(type: KClass<P>): P? {
         var result: P? = null
         for (step in steps) {

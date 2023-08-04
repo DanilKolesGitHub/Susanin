@@ -76,7 +76,7 @@ fun ScreenContext.stack(
     addInitial: Boolean = false,
     handleBackButton: Boolean = true,
     tag: String = NavigationType.STACK.name,
-) = stack(
+) = this.stack(
     initial = initialScreen,
     addInitial = addInitial,
     handleBackButton = handleBackButton,
@@ -89,7 +89,7 @@ fun ScreenContext.stack(
     addInitial: Boolean = false,
     handleBackButton: Boolean = true,
     tag: String = NavigationType.STACK.name,
-) = stack(
+) = this.stack(
     initialProvider = initialProvider,
     addInitial = addInitial,
     handleBackButton = handleBackButton,
