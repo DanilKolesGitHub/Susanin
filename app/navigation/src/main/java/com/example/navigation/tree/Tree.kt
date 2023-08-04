@@ -129,7 +129,7 @@ class Tree<T>(dependencyMap: Map<T, Collection<T>>) {
                 current = parent
                 parent = current.parent
             }
-            return null
+            return findNodeByPartPath(current, path)
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.tree
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -10,11 +11,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun TreeView(uiNode: UiNode) {
+fun TreeView(
+    uiNode: UiNode,
+    click: (UiNode) -> Unit
+) {
     Column(Modifier
         .fillMaxWidth()
         .wrapContentHeight()
         .padding(16.dp)
+        .clickable { click(uiNode) }
         .background(color = Color(218,75,31,50))) {
         Text(
             color = Color.DarkGray,
@@ -23,7 +28,7 @@ fun TreeView(uiNode: UiNode) {
             modifier = Modifier.wrapContentSize().padding(start = 16.dp, top = 4.dp, bottom = 4.dp)
         )
         uiNode.children.forEach {
-            TreeView(uiNode = it)
+            TreeView(uiNode = it, click = click)
         }
     }
 }

@@ -1,18 +1,12 @@
 package com.example.tree
 
-data class UiNode(val name: String, val children : List<UiNode>) {
+import com.example.navigation.screens.ScreenParams
+import kotlin.reflect.KClass
 
-    constructor(name: String, vararg children : UiNode): this(name, children.toList())
+data class UiNode(val type: KClass<out ScreenParams>,
+                  val children : List<UiNode>,
+                  val parents: List<KClass<out ScreenParams>>) {
+    val name: String get() = type.simpleName?.removeSuffix("ScreenParams")?: "wtf"
 }
-
-val mock =
-UiNode("Main",
-    UiNode("Bottom",
-        UiNode("Feed"),
-        UiNode("Video"),
-    ),
-    UiNode("Search"),
-    UiNode("Dialog")
-)
 
 

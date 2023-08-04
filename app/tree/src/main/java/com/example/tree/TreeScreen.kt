@@ -15,17 +15,45 @@ import com.example.navigation.router.ScreenRegister
 import com.example.navigation.screens.ScreenFactory
 import com.example.navigation.screens.ScreenParams
 import com.example.navigation.screens.ViewScreen
+import com.example.navigation.transaction.PathBuilder
+import com.example.navigation.transaction.transaction
 import com.example.navigation.tree.Tree
 import kotlin.reflect.KClass
 
 class TreeScreen(context: ScreenContext, type: TreeScreenParams): ViewScreen<TreeScreenParams>(context, type) {
 
-    val navTree = toUi(this.navigation.tree.root)
+    val navTree = toUi(this.navigation.tree.root, listOf())
 
-    private fun toUi(root: Tree.Node<KClass<out ScreenParams>>): UiNode {
-        return UiNode(root.data.simpleName?.removeSuffix("ScreenParams")?: "wtf", root.children.values.map { toUi(it) })
+    private fun toUi(root: Tree.Node<KClass<out ScreenParams>>, parents: List<KClass<out ScreenParams>>): UiNode {
+        val newParents = parents + root.data
+        return UiNode(
+            root.data,
+            root.children.values.map { toUi(it, newParents) },
+            parents
+        )
     }
 
+    fun openNode(uiNode: UiNode) {
+        transaction {
+            val builder = PathBuilder<ScreenParams>()
+            uiNode.parents.forEach {
+                builder.inside(it)
+            }
+            val params = toParams(uiNode.type)
+            if (params == null)
+                builder.open(uiNode.type)
+            else
+                builder.open(params)
+        }
+    }
+
+    private fun toParams(type: KClass<out ScreenParams>): ScreenParams?{
+        return when (type) {
+            ResultScreenParams::class -> ResultScreenParams("hello")
+            DialogScreenParams::class -> DialogScreenParams("hello")
+            else -> null
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,7 +62,7 @@ class TreeScreen(context: ScreenContext, type: TreeScreenParams): ViewScreen<Tre
         val layout = ComposeView(container.context)
         layout.setContent {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                TreeView(navTree)
+                TreeView(navTree, ::openNode)
             }
         }
         return layout
