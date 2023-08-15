@@ -4,4 +4,5 @@ internal enum class NavigationType {
     STACK,
     SLOT,
     PAGES,
+    DIALOGS,
 }

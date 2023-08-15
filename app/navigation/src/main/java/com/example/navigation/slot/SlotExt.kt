@@ -6,41 +6,48 @@ import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.Value
 import com.example.navigation.NavigationType
 import com.example.navigation.context.NavigationContext
-import com.example.navigation.transaction.TransactionBuilder
+import com.example.navigation.dispatcher.Type
 import com.example.navigation.navigation.children
+import com.example.navigation.register.HierarchyBuilder
 
-fun <Params: Parcelable, Instance: Any> NavigationContext<Params>.slot(
+fun <Params : Parcelable> HierarchyBuilder<Params>.slot(vararg types: Type<Params>) =
+    navigation(NavigationType.SLOT.name, *types)
+
+fun <Params : Parcelable, Instance : Any> NavigationContext<Params>.slot(
     initialSlot: Params? = null,
     handleBackButton: Boolean = true,
-    tag: String = NavigationType.SLOT.name,
+    tag: String? = null,
     factory: (params: Params, context: NavigationContext<Params>) -> Instance,
 ) = slot(
     initialProvider = { initialSlot },
     handleBackButton = handleBackButton,
     tag = tag,
-    factory = factory
+    factory = factory,
 )
 
-fun <Params: Parcelable, Instance: Any> NavigationContext<Params>.slot(
+fun <Params : Parcelable, Instance : Any> NavigationContext<Params>.slot(
     initialProvider: () -> Params?,
     handleBackButton: Boolean = true,
-    tag: String = NavigationType.SLOT.name,
+    tag: String? = null,
     factory: (params: Params, context: NavigationContext<Params>) -> Instance,
 ): Value<ChildSlot<Params, Instance>> {
+    val tag = tag ?: NavigationType.SLOT.name
     val navigationHolder = navigation.provideHolder(tag) { pending ->
-        val initialScreen = pending ?: initialProvider()
+        val initialScreen = when {
+            pending.isNullOrEmpty() -> initialProvider()
+            else -> pending.lastOrNull()
+        }
         SlotNavigationHolder(tag, initialScreen)
     }
     return children(
         navigationHolder = navigationHolder,
         handleBackButton = handleBackButton,
         tag = tag,
-        stateMapper =  { _, children ->
+        stateMapper = { _, children ->
             @Suppress("UNCHECKED_CAST")
-            val createdChild= children.firstOrNull()  as? Child.Created?
+            val createdChild = children.firstOrNull() as? Child.Created?
             ChildSlot(createdChild)
         },
-        factory
+        factory,
     )
 }
-

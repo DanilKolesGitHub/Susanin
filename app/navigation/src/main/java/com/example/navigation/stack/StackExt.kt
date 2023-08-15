@@ -6,14 +6,18 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
 import com.example.navigation.NavigationType
 import com.example.navigation.context.NavigationContext
-import com.example.navigation.transaction.TransactionBuilder
+import com.example.navigation.dispatcher.Type
 import com.example.navigation.navigation.children
+import com.example.navigation.register.HierarchyBuilder
+
+fun <Params : Parcelable> HierarchyBuilder<Params>.stack(vararg types: Type<Params>) =
+    navigation(NavigationType.STACK.name, *types)
 
 fun <Params : Parcelable, Instance : Any> NavigationContext<Params>.stack(
     initial: Params,
     addInitial: Boolean = false,
     handleBackButton: Boolean = true,
-    tag: String = NavigationType.STACK.name,
+    tag: String? = null,
     factory: (params: Params, context: NavigationContext<Params>) -> Instance,
 ) = stack(
     initialProvider = { listOf(initial) },
@@ -27,17 +31,16 @@ fun <Params : Parcelable, Instance : Any> NavigationContext<Params>.stack(
     initialProvider: () -> List<Params>,
     addInitial: Boolean = false,
     handleBackButton: Boolean = true,
-    tag: String = NavigationType.STACK.name,
+    tag: String? = null,
     factory: (params: Params, context: NavigationContext<Params>) -> Instance,
 ): Value<ChildStack<Params, Instance>> {
+    val tag = tag ?: NavigationType.STACK.name
     val navigationHolder = navigation.provideHolder(tag) { pending ->
-        val initialScreens = if (pending != null) {
-            if (addInitial)
-                initialProvider() + pending
-            else
-                listOf(pending)
-        } else {
-            initialProvider()
+        val pendingStack: List<Params>? = pending?.toList()
+        val initialScreens = when {
+            pendingStack.isNullOrEmpty() -> initialProvider()
+            addInitial -> initialProvider() + pendingStack
+            else -> pendingStack
         }
         StackNavigationHolder(tag, initialScreens)
     }

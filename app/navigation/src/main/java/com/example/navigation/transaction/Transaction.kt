@@ -2,20 +2,26 @@ package com.example.navigation.transaction
 
 import android.os.Handler
 import android.os.Looper
+import com.example.navigation.context.NavigationContext
 import com.example.navigation.navigation.NavigationManager
 
-class Transaction<P : Any>(
-    private val navigationManager: NavigationManager<P>,
-    private val stages: List<TransactionStage<P>>
-) {
+interface Transaction<P : Any> {
+    fun commit(navigationManager: NavigationManager<P>)
+}
 
-    fun invoke() {
-        Handler(Looper.getMainLooper()).post {
-            stages.forEach { it.invoke(navigationManager) }
-        }
+private fun<P : Any>  commit(manager: NavigationManager<P>, transactions: List<Transaction<P>>){
+    val handler = Handler(Looper.getMainLooper())
+    transactions.forEach{
+        handler.post { it.commit(manager) }
     }
 }
 
-interface TransactionStage<P : Any> {
-    fun invoke(navigationManager: NavigationManager<P>)
+fun<P : Any> NavigationManager<P>.transaction(builder: TransactionBuilder<P>.() -> Unit) {
+    val transactionBuilder = TransactionBuilder<P>()
+    transactionBuilder.builder()
+    commit(this, transactionBuilder.transactions)
+}
+
+fun<P : Any> NavigationContext<P>.transaction(builder: TransactionBuilder<P>.() -> Unit) {
+    this.navigation.transaction(builder)
 }

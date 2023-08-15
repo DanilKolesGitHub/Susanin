@@ -13,7 +13,7 @@ import com.example.navigation.stack.stack
 private fun ScreenContext.defaultFactory(
     screenParams: ScreenParams,
     context: NavigationContext<ScreenParams>
-) = router.screenFactory.create(screenParams, DefaultScreenContext(context, router))
+) = extensions.factory.create(screenParams, DefaultScreenContext(context, extensions))
 
 fun ScreenContext.pages(
     initialPages: List<ScreenParams>,

@@ -5,14 +5,18 @@ import android.view.View
 import android.view.ViewGroup
 import com.example.navigation.DialogScreenParams
 import com.example.navigation.MainScreenParams
-import com.example.navigation.ResultScreenParams
 import com.example.navigation.TabScreenParams
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.navigation.NavigationRegister
-import com.example.navigation.router.ScreenRegister
-import com.example.navigation.screens.*
+import com.example.navigation.factory.ScreenFactory
+import com.example.navigation.register.ScreenRegister
+import com.example.navigation.screens.Screen
+import com.example.navigation.screens.ViewScreen
+import com.example.navigation.screens.slot
+import com.example.navigation.screens.stack
 import com.example.navigation.slot.SlotHostView
+import com.example.navigation.slot.slot
 import com.example.navigation.stack.StackHostView
+import com.example.navigation.stack.stack
 import com.example.navigation.view.BottomUpTransition
 import com.example.navigation.view.ForwardBackwardTransition
 
@@ -38,7 +42,6 @@ class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, 
 
 fun registerMainScreens(
     register: ScreenRegister,
-    navigationRegister: NavigationRegister<ScreenParams>
 ) {
     register.registerFactory(
         MainScreenParams::class,
@@ -62,11 +65,8 @@ fun registerMainScreens(
             }
         }
     )
-    navigationRegister.registerStackNavigation(
-        MainScreenParams::class,
-        TabScreenParams::class)
-
-    navigationRegister.registerSlotNavigation(
-        MainScreenParams::class,
-        DialogScreenParams::class)
+    register.registerNavigation(MainScreenParams::class){
+        stack(TabScreenParams::class)
+        slot(DialogScreenParams::class)
+    }
 }

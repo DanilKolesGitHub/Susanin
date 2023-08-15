@@ -10,14 +10,14 @@ import com.example.navigation.TabScreenParams
 import com.example.navigation.TreeTabScreenParams
 import com.example.navigation.VideoTabScreenParams
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.navigation.NavigationRegister
-import com.example.navigation.transaction.transaction
+import com.example.navigation.factory.ScreenFactory
 import com.example.navigation.pages.PagesHostView
-import com.example.navigation.router.ScreenRegister
-import com.example.navigation.screens.ScreenFactory
+import com.example.navigation.pages.pages
+import com.example.navigation.register.ScreenRegister
 import com.example.navigation.screens.ScreenParams
 import com.example.navigation.screens.ViewScreen
 import com.example.navigation.screens.pages
+import com.example.navigation.transaction.transaction
 import com.example.navigation.view.ForwardBackwardTransition
 
 class TabScreen(context: ScreenContext, type: TabScreenParams): ViewScreen<TabScreenParams>(context, type) {
@@ -76,7 +76,6 @@ class TabScreen(context: ScreenContext, type: TabScreenParams): ViewScreen<TabSc
 
 fun registerTabScreens(
     register: ScreenRegister,
-    navigationRegister: NavigationRegister<ScreenParams>
 ) {
     register.registerFactory(
         TabScreenParams::class,
@@ -113,14 +112,10 @@ fun registerTabScreens(
             }
         }
     )
-    navigationRegister.registerDefault(TabScreenParams)
-    navigationRegister.registerDefault(FeedTabScreenParams)
-    navigationRegister.registerDefault(VideoTabScreenParams)
-    navigationRegister.registerDefault(TreeTabScreenParams)
-    navigationRegister.registerPagesNavigation(
-        TabScreenParams::class,
-        FeedTabScreenParams::class,
-        VideoTabScreenParams::class,
-        TreeTabScreenParams::class,
-    )
+
+    register.registerNavigation(TabScreenParams){
+        pages(FeedTabScreenParams::class,
+            VideoTabScreenParams::class,
+            TreeTabScreenParams::class)
+    }
 }

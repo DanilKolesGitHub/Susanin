@@ -3,10 +3,10 @@ package com.example.navigation.screens
 import android.os.Parcelable
 import kotlin.reflect.KClass
 
-typealias ScreenKey = KClass<out ScreenParams>
+typealias ScreenType = KClass<out ScreenParams>
 
 interface ScreenParams: Parcelable {
 
-    val key: ScreenKey
+    val key: ScreenType
         get() = this::class
 }

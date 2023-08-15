@@ -4,13 +4,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import com.example.navigation.*
+import com.example.navigation.FeedTabScreenParams
+import com.example.navigation.SearchScreenParams
+import com.example.navigation.VideoScreenParams
+import com.example.navigation.VideoTabScreenParams
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.navigation.NavigationRegister
-import com.example.navigation.router.ScreenRegister
-import com.example.navigation.screens.ScreenFactory
-import com.example.navigation.screens.ScreenParams
+import com.example.navigation.factory.ScreenFactory
+import com.example.navigation.register.ScreenRegister
 import com.example.navigation.screens.ViewScreen
+import com.example.navigation.stack.stack
 import com.example.navigation.transaction.transaction
 
 class VideoScreen(context: ScreenContext, screenType: VideoScreenParams): ViewScreen<VideoScreenParams>(context, screenType) {
@@ -39,7 +41,6 @@ class VideoScreen(context: ScreenContext, screenType: VideoScreenParams): ViewSc
 
 fun registerVideoScreens(
     register: ScreenRegister,
-    navigationRegister: NavigationRegister<ScreenParams>
 ) {
     register.registerFactory(VideoScreenParams::class, object : ScreenFactory<VideoScreenParams> {
         override fun create(screenType: VideoScreenParams, context: ScreenContext): VideoScreen {
@@ -47,9 +48,7 @@ fun registerVideoScreens(
         }
     })
 
-    navigationRegister.registerStackNavigation(
-        VideoTabScreenParams::class,
-        VideoScreenParams::class,
-        SearchScreenParams::class
-    )
+    register.registerNavigation(VideoTabScreenParams){
+        stack(VideoScreenParams::class, SearchScreenParams::class)
+    }
 }

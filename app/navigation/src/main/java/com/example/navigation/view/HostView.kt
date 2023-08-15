@@ -127,7 +127,7 @@ open class HostView @JvmOverloads constructor(
      * Восстанавливает состояние ActiveChild.
      * Если оно находится в inactiveChildren.
      */
-    private fun restoreActive(active: ActiveChild<*, *>){
+    protected fun restoreActive(active: ActiveChild<*, *>){
         val inactiveChild: InactiveChild? = inactiveChildren[active.id]
         if (inactiveChild != null) {
             active.view.restoreHierarchyState(inactiveChild.savedState)

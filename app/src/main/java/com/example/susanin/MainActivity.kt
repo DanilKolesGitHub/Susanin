@@ -6,18 +6,18 @@ import android.util.Log
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import com.arkivanov.decompose.defaultComponentContext
-import com.arkivanov.essenty.lifecycle.*
+import com.arkivanov.essenty.lifecycle.LifecycleRegistry
+import com.arkivanov.essenty.lifecycle.create
+import com.arkivanov.essenty.lifecycle.destroy
+import com.arkivanov.essenty.lifecycle.pause
+import com.arkivanov.essenty.lifecycle.resume
+import com.arkivanov.essenty.lifecycle.start
+import com.arkivanov.essenty.lifecycle.stop
 import com.example.bottomnav.registerTabScreens
 import com.example.feed.registerFeedScreens
 import com.example.navigation.MainScreenParams
-import com.example.navigation.context.DefaultNavigationContext
-import com.example.navigation.context.DefaultScreenContext
-import com.example.navigation.navigation.NavigationDispatcher
-import com.example.navigation.navigation.NavigationManager
-import com.example.navigation.navigation.NavigationRegister
-import com.example.navigation.router.Router
-import com.example.navigation.router.ScreenRegister
-import com.example.navigation.screens.ScreenParams
+import com.example.navigation.context.defaultScreenContext
+import com.example.navigation.register.ScreenRegisterImpl
 import com.example.search.registerSearchScreens
 import com.example.tree.registerTreeScreens
 import com.example.video.registerVideoScreens
@@ -29,27 +29,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val register = ScreenRegister()
-        val navigationRegister = NavigationRegister<ScreenParams>()
-        registerTabScreens(register, navigationRegister)
-        registerFeedScreens(register, navigationRegister)
-        registerVideoScreens(register, navigationRegister)
-        registerTreeScreens(register, navigationRegister)
-        registerSearchScreens(register, navigationRegister)
-        registerMainScreens(register, navigationRegister)
+        val register = ScreenRegisterImpl()
+        registerTabScreens(register)
+        registerFeedScreens(register)
+        registerVideoScreens(register)
+        registerTreeScreens(register)
+        registerSearchScreens(register)
+        registerMainScreens(register)
 
-        val rootManager = NavigationManager(MainScreenParams, null, NavigationDispatcher(
-            navigationRegister.navigation,
-            navigationRegister.default,
-        ))
-        val router = Router(register)
         val mainScreen = MainScreen(
-            DefaultScreenContext(
-                DefaultNavigationContext(
-                    defaultComponentContext(),
-                    rootManager
-                ),
-                router,
+            register.defaultScreenContext(
+                defaultComponentContext(),
+                MainScreenParams
             )
         )
         val view = mainScreen.createView(window.decorView as ViewGroup, mainScreen.lifecycle)

@@ -10,11 +10,10 @@ import com.example.navigation.ResultScreenParams
 import com.example.navigation.SearchScreenParams
 import com.example.navigation.VideoTabScreenParams
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.navigation.NavigationRegister
-import com.example.navigation.transaction.transaction
-import com.example.navigation.router.ScreenRegister
-import com.example.navigation.screens.ScreenParams
+import com.example.navigation.register.ScreenRegister
 import com.example.navigation.screens.ViewScreen
+import com.example.navigation.stack.stack
+import com.example.navigation.transaction.transaction
 
 class FeedScreen(context: ScreenContext, type: FeedScreenParams): ViewScreen<FeedScreenParams>(context, type) {
 
@@ -40,15 +39,12 @@ class FeedScreen(context: ScreenContext, type: FeedScreenParams): ViewScreen<Fee
 
 fun registerFeedScreens(
     register: ScreenRegister,
-    navigationRegister: NavigationRegister<ScreenParams>
 ) {
-    register.registerFactory(FeedScreenParams::class) { context, type ->
-        FeedScreen(context, type)
+    register.registerFactory<FeedScreenParams> { context, type ->
+        FeedScreen(type, context)
     }
 
-    navigationRegister.registerStackNavigation(
-        FeedTabScreenParams::class,
-        FeedScreenParams::class,
-        SearchScreenParams::class
-    )
+    register.registerNavigation(FeedTabScreenParams){
+        stack(FeedScreenParams::class, SearchScreenParams::class)
+    }
 }

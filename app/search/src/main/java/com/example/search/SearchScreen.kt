@@ -7,13 +7,12 @@ import com.example.navigation.InputScreenParams
 import com.example.navigation.ResultScreenParams
 import com.example.navigation.SearchScreenParams
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.navigation.NavigationRegister
-import com.example.navigation.router.ScreenRegister
-import com.example.navigation.screens.ScreenFactory
-import com.example.navigation.screens.ScreenParams
+import com.example.navigation.factory.ScreenFactory
+import com.example.navigation.register.ScreenRegister
 import com.example.navigation.screens.ViewScreen
 import com.example.navigation.screens.stack
 import com.example.navigation.stack.StackHostView
+import com.example.navigation.stack.stack
 import com.example.navigation.view.ForwardBackwardTransition
 
 class SearchScreen(context: ScreenContext, type: SearchScreenParams): ViewScreen<SearchScreenParams>(context, type) {
@@ -32,7 +31,6 @@ class SearchScreen(context: ScreenContext, type: SearchScreenParams): ViewScreen
 
 fun registerSearchScreens(
     register: ScreenRegister,
-    navigationRegister: NavigationRegister<ScreenParams>
 ) {
 
     register.registerFactory(SearchScreenParams::class, object : ScreenFactory<SearchScreenParams> {
@@ -51,10 +49,9 @@ fun registerSearchScreens(
         }
     })
 
-    navigationRegister.registerDefault(SearchScreenParams)
-    navigationRegister.registerStackNavigation(
-        SearchScreenParams::class,
-        InputScreenParams::class,
-        ResultScreenParams::class
-    )
+    register.registerNavigation(SearchScreenParams){
+        stack(
+            InputScreenParams::class,
+            ResultScreenParams::class)
+    }
 }

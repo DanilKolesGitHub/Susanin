@@ -1,6 +1,7 @@
 package com.example.navigation.navigation
 
 import com.example.navigation.NavigationType
+import com.example.navigation.dispatcher.Type
 
 class NavigationRegister<P : Any> {
 
