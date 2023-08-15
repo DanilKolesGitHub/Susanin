@@ -12,13 +12,13 @@ import com.example.navigation.context.ScreenContext
 
 abstract class ViewScreen<P: ScreenParams>(context: ScreenContext, params: P):
     Screen<P>(context, params) {
-
+    protected val viewll = LifecycleLogger("view ${params}", Log::e)
     private var _viewLifecycle: Lifecycle? = null
     protected val viewLifecycle: Lifecycle get() { return _viewLifecycle ?: throw IllegalLifecycleException(null) }
 
     override fun createView(parent: ViewGroup, viewLifecycle: Lifecycle): View {
         _viewLifecycle = viewLifecycle
-        viewLifecycle.subscribe(LifecycleLogger("view ${params}", Log::d))
+        viewLifecycle.subscribe(viewll)
         val view = onCreateView(LayoutInflater.from(parent.context), parent)
         viewLifecycle.doOnCreate { onViewCreated(view) }
         viewLifecycle.doOnDestroy {

@@ -12,9 +12,10 @@ abstract class Screen<P: ScreenParams>(context: ScreenContext, params: P):
     Lifecycle.Callbacks {
 
     val params = params
+    protected val ll = LifecycleLogger("screen ${params}", Log::d)
 
     init {
         lifecycle.subscribe(this)
-        lifecycle.subscribe(LifecycleLogger("screen ${params}", Log::e))
+        lifecycle.subscribe(ll)
     }
 }
