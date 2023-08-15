@@ -91,8 +91,8 @@ open class HostView @JvmOverloads constructor(
      * Удаляет из inactiveChildren состояния, которые не находятся в valid.
      * Нужно чтобы не держать в памяти лишние сохраненные состояния View.
      */
-    protected fun validateInactive(valid: Collection<Child<*, *>>){
-        val validId = valid.asSequence().map { it.id() }.toSet()
+    protected fun validateInactive(valid: Collection<Child<*, *>>?){
+        val validId = valid?.asSequence()?.map { it.id() }?.toSet() ?: emptySet<Child<*, *>>()
         val validChildren = HashMap<Parcelable, InactiveChild>()
         inactiveChildren.forEach { (id, inactive) ->
             if (id in validId){
@@ -183,7 +183,7 @@ open class HostView @JvmOverloads constructor(
         inactiveChildren.putAll(savedState.childStates)
     }
 
-    private companion object {
+    protected companion object {
 
         fun View.saveHierarchyState(): SparseArray<Parcelable> =
             SparseArray<Parcelable>()

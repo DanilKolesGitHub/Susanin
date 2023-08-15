@@ -1,5 +1,6 @@
 package com.example.tree
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -53,7 +54,7 @@ class TreeScreen(context: ScreenContext, type: TreeScreenParams): ViewScreen<Tre
         return when (type) {
             ResultScreenParams::class -> ResultScreenParams("hello")
             InputScreenParams::class -> InputScreenParams
-            DialogScreenParams::class -> DialogScreenParams("hello")
+            DialogScreenParams::class -> DialogScreenParams(Color.BLUE)
             else -> null
         }
     }

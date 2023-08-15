@@ -2,7 +2,6 @@ package com.example.navigation
 
 import androidx.transition.Transition
 import com.example.navigation.screens.ScreenParams
-import com.example.navigation.view.ForwardBackwardTransition
 import com.example.navigation.view.TopTransition
 import com.example.navigation.view.TransitionProvider
 import kotlinx.android.parcel.Parcelize
@@ -47,7 +46,7 @@ object InputScreenParams: ScreenParams
 data class ResultScreenParams(val result: String): ScreenParams
 
 @Parcelize
-data class DialogScreenParams(val result: String): ScreenParams
+data class DialogScreenParams(val color: Int): ScreenParams
 
 @Parcelize
 class SettingsScreenParams(): ScreenParams

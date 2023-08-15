@@ -4,6 +4,7 @@ import com.example.navigation.NavigationType
 import com.example.navigation.context.DefaultScreenContext
 import com.example.navigation.context.NavigationContext
 import com.example.navigation.context.ScreenContext
+import com.example.navigation.dialogs.dialogs
 import com.example.navigation.pages.BackBehaviour
 import com.example.navigation.pages.CloseBehaviour
 import com.example.navigation.pages.pages
@@ -92,6 +93,28 @@ fun ScreenContext.stack(
 ) = this.stack(
     initialProvider = initialProvider,
     addInitial = addInitial,
+    handleBackButton = handleBackButton,
+    tag = tag,
+    factory = ::defaultFactory,
+)
+
+fun ScreenContext.dialogs(
+    initialScreen: ScreenParams,
+    handleBackButton: Boolean = true,
+    tag: String = NavigationType.DIALOGS.name,
+) = this.dialogs(
+    initial = initialScreen,
+    handleBackButton = handleBackButton,
+    tag = tag,
+    factory = ::defaultFactory,
+)
+
+fun ScreenContext.dialogs(
+    initialProvider: () -> List<ScreenParams>,
+    handleBackButton: Boolean = true,
+    tag: String = NavigationType.DIALOGS.name,
+) = this.dialogs(
+    initialProvider = initialProvider,
     handleBackButton = handleBackButton,
     tag = tag,
     factory = ::defaultFactory,
