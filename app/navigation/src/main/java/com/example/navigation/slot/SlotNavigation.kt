@@ -31,10 +31,11 @@ internal class SlotNavigation<P: Parcelable> : DefaultNavigation<P, SlotHostStat
         onComplete = onComplete
     )
 
-    override fun back(state: SlotHostState<P>): (() -> SlotHostState<P>)? {
-        if (state.slot == null) return null
-        return {
-            SlotHostState(null)
-        }
+    override fun canBack(state: SlotHostState<P>): Boolean {
+        return state.slot != null
+    }
+
+    override fun back(state: SlotHostState<P>): SlotHostState<P> {
+        return SlotHostState(null)
     }
 }

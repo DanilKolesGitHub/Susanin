@@ -7,6 +7,7 @@ import com.arkivanov.decompose.value.Value
 import com.example.navigation.NavigationType
 import com.example.navigation.context.NavigationContext
 import com.example.navigation.dispatcher.Type
+import com.example.navigation.layer.Layer
 import com.example.navigation.navigation.children
 import com.example.navigation.register.HierarchyBuilder
 
@@ -18,12 +19,14 @@ fun <Params : Parcelable, Instance : Any> NavigationContext<Params>.stack(
     addInitial: Boolean = false,
     handleBackButton: Boolean = true,
     tag: String? = null,
+    layer: Layer? = null,
     factory: (params: Params, context: NavigationContext<Params>) -> Instance,
 ) = stack(
     initialProvider = { listOf(initial) },
     addInitial = addInitial,
     handleBackButton = handleBackButton,
     tag = tag,
+    layer = layer,
     factory,
 )
 
@@ -32,6 +35,7 @@ fun <Params : Parcelable, Instance : Any> NavigationContext<Params>.stack(
     addInitial: Boolean = false,
     handleBackButton: Boolean = true,
     tag: String? = null,
+    layer: Layer? = null,
     factory: (params: Params, context: NavigationContext<Params>) -> Instance,
 ): Value<ChildStack<Params, Instance>> {
     val tag = tag ?: NavigationType.STACK.name
@@ -48,6 +52,7 @@ fun <Params : Parcelable, Instance : Any> NavigationContext<Params>.stack(
         navigationHolder = navigationHolder,
         handleBackButton = handleBackButton,
         tag = tag,
+        layer = layer,
         stateMapper = { _, children ->
             @Suppress("UNCHECKED_CAST")
             val createdChildren = children as List<Child.Created<Params, Instance>>

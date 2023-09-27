@@ -27,8 +27,14 @@
         android:layout_height="match_parent"/>
 
 
+    <com.example.navigation.slot.SlotHostView
+        android:id="@+id/player_slot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+
     <com.example.navigation.dialogs.DialogsHostView
-        android:id="@+id/slot"
+        android:id="@+id/dialogs"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 

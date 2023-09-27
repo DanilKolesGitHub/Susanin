@@ -35,7 +35,11 @@ internal class PagesNavigation<P: Parcelable>(
         onComplete = onComplete
     )
 
-    override fun back(state: PagesHostState<P>): (() -> PagesHostState<P>)? {
+    override fun canBack(state: PagesHostState<P>): Boolean {
+        return backBehaviour.canBack(state)
+    }
+
+    override fun back(state: PagesHostState<P>): PagesHostState<P> {
         return backBehaviour.back(state)
     }
 
@@ -73,34 +77,39 @@ internal class PagesNavigation<P: Parcelable>(
     }
 
     sealed interface BackBehaviour {
-        fun  <P : Parcelable> back(state: PagesHostState<P>): (() -> PagesHostState<P>)?
+        fun  <P : Parcelable> canBack(state: PagesHostState<P>): Boolean
+        fun  <P : Parcelable> back(state: PagesHostState<P>) : PagesHostState<P>
 
         object Circle : BackBehaviour {
 
-            override fun <P : Parcelable> back(state: PagesHostState<P>): (() -> PagesHostState<P>)? {
-                return {
-                    CloseBehaviour.Circle.close(state)
-                }
+            override fun <P : Parcelable> canBack(state: PagesHostState<P>): Boolean {
+                return true
+            }
+
+            override fun <P : Parcelable> back(state: PagesHostState<P>): PagesHostState<P> {
+                return  CloseBehaviour.Circle.close(state)
             }
         }
 
         object ToFirst : BackBehaviour {
 
-            override fun <P : Parcelable> back(state: PagesHostState<P>): (() -> PagesHostState<P>)? {
-                if (state.selected == 0) return null
-                return {
-                    CloseBehaviour.ToFirst.close(state)
-                }
+            override fun <P : Parcelable> canBack(state: PagesHostState<P>): Boolean {
+                return state.selected != 0
+            }
+
+            override fun <P : Parcelable> back(state: PagesHostState<P>): PagesHostState<P>  {
+                return CloseBehaviour.ToFirst.close(state)
             }
         }
 
         object UntilFirst : BackBehaviour {
 
-            override fun <P : Parcelable> back(state: PagesHostState<P>): (() -> PagesHostState<P>)? {
-                if (state.selected == 0) return null
-                return {
-                    CloseBehaviour.UntilFirst.close(state)
-                }
+            override fun <P : Parcelable> canBack(state: PagesHostState<P>): Boolean {
+                return state.selected != 0
+            }
+
+            override fun <P : Parcelable> back(state: PagesHostState<P>): PagesHostState<P>  {
+                return CloseBehaviour.UntilFirst.close(state)
             }
         }
     }

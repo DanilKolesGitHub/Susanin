@@ -15,6 +15,7 @@ import com.arkivanov.essenty.lifecycle.start
 import com.arkivanov.essenty.lifecycle.stop
 import com.example.bottomnav.registerTabScreens
 import com.example.feed.registerFeedScreens
+import com.example.miniplayer.registerPlayerScreens
 import com.example.navigation.MainScreenParams
 import com.example.navigation.context.defaultScreenContext
 import com.example.navigation.register.ScreenRegisterImpl
@@ -36,6 +37,7 @@ class MainActivity : AppCompatActivity() {
         registerTreeScreens(register)
         registerSearchScreens(register)
         registerMainScreens(register)
+        registerPlayerScreens(register)
 
         val mainScreen = MainScreen(
             register.defaultScreenContext(

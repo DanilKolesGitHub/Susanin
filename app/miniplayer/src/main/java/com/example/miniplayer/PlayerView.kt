@@ -9,36 +9,40 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-//
-//@OptIn(ExperimentalMaterialApi::class)
-//@Composable
-//fun PlayerView(screen: PlayerScreen) {
-//    val scaffoldState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-//        bottomSheetState = rememberBottomSheetState(
-//            BottomSheetValue.Expanded,
-//            confirmStateChange = {
-//                when(it){
-//                    BottomSheetValue.Expanded -> screen.expand()
-//                    BottomSheetValue.Collapsed -> screen.collapse()
-//                }
-//                true
-//            }
-//        ),
-//    )
-//    BottomSheetScaffold(
-//        scaffoldState = scaffoldState,
-//        sheetContent = {
-//            Box(modifier = Modifier.fillMaxSize().background(Color.LightGray)){
-//                IconButton(
-//                    modifier = Modifier.align(Alignment.TopEnd),
-//                    onClick = { screen.close() }) {
-//                    Icon(
-//                        Icons.Rounded.Close,
-//                        contentDescription = "Play"
-//                    )
-//                }
-//            }
-//        }) {
-//        Box(Modifier.background(Color.Transparent))
-//    }
-//}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun PlayerView(
+    screen: PlayerScreen
+) {
+    val scaffoldState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberBottomSheetState(
+            BottomSheetValue.Expanded,
+            confirmStateChange = {
+                when(it){
+                    BottomSheetValue.Expanded -> screen.expand()
+                    BottomSheetValue.Collapsed -> screen.collapse()
+                }
+                true
+            }
+        ),
+    )
+    BottomSheetScaffold(
+        scaffoldState = scaffoldState,
+        drawerBackgroundColor = Color.Transparent,
+        backgroundColor = Color.Transparent,
+        sheetContent = {
+            Box(modifier = Modifier.fillMaxSize().background(Color.LightGray)){
+                IconButton(
+                    modifier = Modifier.align(Alignment.TopEnd),
+                    onClick = { screen.close() }) {
+                    Icon(
+                        Icons.Rounded.Close,
+                        contentDescription = "Play"
+                    )
+                }
+            }
+        }) {
+        Box(Modifier.background(Color.Transparent))
+    }
+}

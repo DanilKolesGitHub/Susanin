@@ -28,10 +28,11 @@ internal class DialogsNavigation<P: Parcelable>: DefaultNavigation<P, DialogsHos
         onComplete = onComplete
     )
 
-    override fun back(state: DialogsHostState<P>): (() -> DialogsHostState<P>)? {
-        if (state.dialogs.isEmpty()) return null
-        return {
-            DialogsHostState(dialogs = state.dialogs.dropLast(1))
-        }
+    override fun canBack(state: DialogsHostState<P>): Boolean {
+        return state.dialogs.isNotEmpty()
+    }
+
+    override fun back(state: DialogsHostState<P>): DialogsHostState<P> {
+        return DialogsHostState(dialogs = state.dialogs.dropLast(1))
     }
 }

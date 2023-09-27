@@ -23,7 +23,9 @@ interface Navigator<P : Any,  S : NavState<P>>  {
         onComplete: (newState: S, oldState: S) -> Unit = { _, _ -> },
     )
 
-    fun back(state: S): (() -> S)?
+    fun canBack(state: S): Boolean
+
+    fun back(state: S): S
 
 }
 

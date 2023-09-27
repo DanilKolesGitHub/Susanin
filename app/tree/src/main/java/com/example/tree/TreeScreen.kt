@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import com.example.navigation.DialogScreenParams
 import com.example.navigation.InputScreenParams
+import com.example.navigation.PlayerScreenParams
 import com.example.navigation.ResultScreenParams
 import com.example.navigation.TreeScreenParams
 import com.example.navigation.TreeTabScreenParams
@@ -54,6 +55,7 @@ class TreeScreen(context: ScreenContext, type: TreeScreenParams): ViewScreen<Tre
         return when (type) {
             ResultScreenParams::class -> ResultScreenParams("hello")
             InputScreenParams::class -> InputScreenParams
+            PlayerScreenParams::class -> PlayerScreenParams
             DialogScreenParams::class -> DialogScreenParams(Color.BLUE)
             else -> null
         }

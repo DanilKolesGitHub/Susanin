@@ -6,6 +6,7 @@ import com.arkivanov.decompose.value.Value
 import com.example.navigation.NavigationType
 import com.example.navigation.context.NavigationContext
 import com.example.navigation.dispatcher.Type
+import com.example.navigation.layer.Layer
 import com.example.navigation.navigation.children
 import com.example.navigation.register.HierarchyBuilder
 
@@ -19,6 +20,7 @@ fun <Params : Parcelable, Instance : Any> NavigationContext<Params>.pages(
     closeBehaviour: CloseBehaviour = CloseBehaviour.Circle,
     backBehaviour: BackBehaviour = BackBehaviour.Circle,
     tag: String? = null,
+    layer: Layer? = null,
     factory: (params: Params, context: NavigationContext<Params>) -> Instance,
 ) = pages(
     { initialPages },
@@ -27,6 +29,7 @@ fun <Params : Parcelable, Instance : Any> NavigationContext<Params>.pages(
     closeBehaviour,
     backBehaviour,
     tag,
+    layer,
     factory,
 )
 
@@ -37,6 +40,7 @@ fun <Params : Parcelable, Instance : Any> NavigationContext<Params>.pages(
     closeBehaviour: CloseBehaviour,
     backBehaviour: BackBehaviour,
     tag: String? = null,
+    layer: Layer? = null,
     factory: (params: Params, context: NavigationContext<Params>) -> Instance,
 ): Value<ChildPages<Params, Instance>> {
     val tag = tag ?: NavigationType.PAGES.name
@@ -56,9 +60,13 @@ fun <Params : Parcelable, Instance : Any> NavigationContext<Params>.pages(
         navigationHolder = navigationHolder,
         handleBackButton = handleBackButton,
         tag = tag,
+        layer = layer,
         stateMapper = { state, children ->
+            val items = children.toMutableList()
+            val selected = items.removeLast()
+            items.add(state.selected, selected)
             ChildPages(
-                items = children,
+                items = items,
                 selectedIndex = state.selected,
             )
         },

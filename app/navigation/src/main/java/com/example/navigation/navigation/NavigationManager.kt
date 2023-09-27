@@ -3,6 +3,8 @@ package com.example.navigation.navigation
 import com.arkivanov.decompose.router.children.NavState
 import com.example.navigation.dispatcher.NavigationDispatcher
 import com.example.navigation.dispatcher.Type
+import com.example.navigation.listener.StateListener
+import com.example.navigation.listener.StateListenersHolder
 import java.util.LinkedList
 
 /**
@@ -39,6 +41,9 @@ class NavigationManager<P : Any>(
      * Заполняются, когда нужно открыть дочерний компонент, но компонент еще не создан.
      */
     private val pending = HashMap<String, List<P>>()
+
+
+    private val listeners = StateListenersHolder()
 
     /**
      * Предоставляет все параметры от корня до текущего NavigationManager.
@@ -122,6 +127,22 @@ class NavigationManager<P : Any>(
         children.clear()
         navigationHolders.clear()
         pending.clear()
+    }
+
+    internal fun <S> beforeApplyState(tag: String, newState: S, oldState: S?) {
+        listeners.onBeforeApply(tag, newState, oldState)
+    }
+
+    internal fun <S> afterApplyState(tag: String, newState: S, oldState: S?) {
+        listeners.onAfterApply(tag, newState, oldState)
+    }
+
+    internal fun <S> addStateListener(tag: String, listener: StateListener<S>) {
+        listeners.add(tag, listener)
+    }
+
+    internal fun <S> removeStateListener(tag: String, listener: StateListener<S>) {
+        listeners.remove(tag, listener)
     }
 
     private companion object {

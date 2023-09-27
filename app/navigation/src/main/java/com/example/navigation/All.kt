@@ -34,7 +34,7 @@ object VideoScreenParams: ScreenParams
 object TreeScreenParams: ScreenParams
 
 @Parcelize
-class PlayerScreenParams(): ScreenParams
+object PlayerScreenParams: ScreenParams
 
 @Parcelize
 object SearchScreenParams: ScreenParams

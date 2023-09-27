@@ -16,6 +16,7 @@
             android:layout_height="match_parent"
             android:textSize="42sp"
             android:text="Video"
+            android:id="@+id/video_text"
             android:textColor="@color/accent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"

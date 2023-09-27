@@ -4,43 +4,25 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.example.navigation.DialogScreenParams
+import com.example.navigation.InputScreenParams
 import com.example.navigation.MainScreenParams
 import com.example.navigation.SearchScreenParams
 import com.example.navigation.TabScreenParams
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.dialogs.DialogsHostView
 import com.example.navigation.dialogs.dialogs
 import com.example.navigation.factory.ScreenFactory
 import com.example.navigation.register.ScreenRegister
 import com.example.navigation.screens.Screen
 import com.example.navigation.screens.ViewScreen
-import com.example.navigation.screens.dialogs
-import com.example.navigation.screens.stack
-import com.example.navigation.stack.StackHostView
 import com.example.navigation.stack.stack
-import com.example.navigation.view.ForwardBackwardTransition
 
 class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, MainScreenParams) {
 
-    val stack = stack(
-        SearchScreenParams
-    )
-
-    val dialogs = dialogs(
-        initialProvider = { listOf() }
-//        DialogScreenParams(Color.BLUE)
-    )
 
     override fun onCreateView(layoutInflater: LayoutInflater, parent: ViewGroup): View {
         return layoutInflater.inflate(R.layout.activity_main, parent, false)
     }
 
-    override fun onViewCreated(view: View) {
-        val routerView: StackHostView = view.findViewById(R.id.stack)
-        routerView.observe(stack, viewLifecycle, transitionProvider = ForwardBackwardTransition)
-        val slotView: DialogsHostView = view.findViewById(R.id.slot)
-        slotView.observe(dialogs, viewLifecycle)
-    }
 }
 
 fun registerMainScreens(
@@ -69,7 +51,7 @@ fun registerMainScreens(
         }
     )
     register.registerNavigation(MainScreenParams::class){
-        stack(TabScreenParams::class, SearchScreenParams::class)
+        stack(TabScreenParams::class, SearchScreenParams::class, InputScreenParams::class)
         dialogs(DialogScreenParams::class)
     }
 }

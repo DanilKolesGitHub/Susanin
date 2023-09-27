@@ -6,9 +6,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import com.example.navigation.FeedScreenParams
 import com.example.navigation.FeedTabScreenParams
-import com.example.navigation.ResultScreenParams
 import com.example.navigation.SearchScreenParams
-import com.example.navigation.VideoTabScreenParams
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.register.ScreenRegister
 import com.example.navigation.screens.ViewScreen
@@ -32,9 +30,8 @@ class FeedScreen(context: ScreenContext, type: FeedScreenParams): ViewScreen<Fee
     }
 
     private fun navigate() {
-        transaction {  inside(VideoTabScreenParams::class).open(ResultScreenParams("kjdsn")) }
+        transaction { open(SearchScreenParams) }
     }
-
 }
 
 fun registerFeedScreens(

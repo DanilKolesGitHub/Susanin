@@ -31,10 +31,11 @@ internal class StackNavigation<P: Parcelable>: DefaultNavigation<P, StackHostSta
             onComplete = onComplete
         )
 
-    override fun back(state: StackHostState<P>): (() -> StackHostState<P>)? {
-        if (state.stack.size == 1) return null
-        return {
-            StackHostState(stack = state.stack.dropLast(1))
-        }
+    override fun canBack(state: StackHostState<P>): Boolean {
+        return state.stack.size > 1
+    }
+
+    override fun back(state: StackHostState<P>): StackHostState<P> {
+        return StackHostState(stack = state.stack.dropLast(1))
     }
 }
