@@ -10,6 +10,8 @@ import com.example.navigation.SearchScreenParams
 import com.example.navigation.TabScreenParams
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.dialogs.dialogs
+import com.example.navigation.dialogs.DialogsHostView
+import com.example.navigation.dialogs.dialogs
 import com.example.navigation.factory.ScreenFactory
 import com.example.navigation.register.ScreenRegister
 import com.example.navigation.screens.Screen
