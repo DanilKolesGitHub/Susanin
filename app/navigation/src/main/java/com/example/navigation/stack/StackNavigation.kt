@@ -5,6 +5,13 @@ import com.example.navigation.navigation.DefaultNavigation
 
 internal class StackNavigation<P: Parcelable>: DefaultNavigation<P, StackHostState<P>>() {
 
+    fun update(up: (List<P>) -> List<P>) = navigate(
+            transformer = {
+                it.copy(up(it.stack))
+            },
+            onComplete = { _,_ -> Unit }
+        )
+
     override fun open(
         params: P,
         onComplete: (newState: StackHostState<P>, oldState: StackHostState<P>) -> Unit

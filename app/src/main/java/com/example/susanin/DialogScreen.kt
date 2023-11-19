@@ -7,6 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.TextView
+import com.arkivanov.essenty.lifecycle.Lifecycle
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.example.navigation.DialogScreenParams
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.screens.ViewScreen
@@ -33,6 +36,7 @@ class DialogScreen(context: ScreenContext, type: DialogScreenParams): ViewScreen
 
     override fun onViewCreated(container: View) {
         container.setBackgroundColor(params.color)
+        printlc(container.findViewById<TextView>(R.id.dialog_lc), viewLifecycle)
         container.findViewById<Button>(R.id.dialog_blue_button).setOnClickListener{
             navigate(Color.BLUE)
         }
@@ -42,6 +46,17 @@ class DialogScreen(context: ScreenContext, type: DialogScreenParams): ViewScreen
         container.findViewById<Button>(R.id.dialog_green_button).setOnClickListener{
             navigate(Color.GREEN)
         }
+    }
+
+    private fun printlc(textView: TextView, lifecycle: Lifecycle){
+        lifecycle.subscribe(
+            onCreate = {textView.text = "OnCreate"},
+            onStart  = {textView.text = "onStart"},
+            onResume = {textView.text = "onResume"},
+            onPause = {textView.text = "onPause"},
+            onStop = {textView.text = "onStop"},
+            onDestroy = {textView.text = "onDestroy"},
+        )
     }
 
     private fun navigate(color: Int) {

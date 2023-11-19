@@ -19,6 +19,15 @@ class SlotHostView @JvmOverloads constructor(
 ) : HostView(context, attrs, defStyleAttr) {
 
     private var currentSlot: ChildSlot<*, *>? = null
+    private var currentChild: ActiveChild<*, *>? = null
+
+    override fun saveActive() {
+        saveActive(currentChild)
+    }
+
+    override fun restoreActive() {
+        restoreActive(currentChild)
+    }
 
     /**
      * Подписывается на изменение ChildSlot<C, T> и отрисовывает View.
@@ -29,14 +38,14 @@ class SlotHostView @JvmOverloads constructor(
      * @param slot Источник ChildSlot
      * @param hostViewLifecycle Родительский ЖЦ в котором находится SlotHostView.
      * Нужен для создания дочерних view. Если умирает, то и все дочерние тоже умирают.
-     * @param transitionProvider Анимация изменений в SlotHostView.
+     * @param uiParams Анимация изменений в SlotHostView.
      */
     fun <C : Any, T : ViewRender> observe(
         slot: Value<ChildSlot<C, T>>,
         hostViewLifecycle: Lifecycle,
-        transitionProvider: TransitionProvider? = null,
+        uiParams: UiParams? = null,
     ) {
-        this.transitionProvider = transitionProvider
+        this.uiParams = uiParams
         // Если родитель умирает останавливаем анимацию.
         hostViewLifecycle.doOnDestroy { endTransition() }
         // Реагируем на изменения только в состоянии STARTED и выше.
@@ -66,31 +75,31 @@ class SlotHostView @JvmOverloads constructor(
         @Suppress("UNCHECKED_CAST")
         val currentChild = currentChild as ActiveChild<C, T>?
 
-        if (currentChild?.child?.configuration != slot.child?.configuration) {
-            // Создаем новый активный экран.
-            val activeChild = slot.child?.let {
-                createActiveChild(hostViewLifecycle, it)
-            }
-            // Анимируем изменения. Или нет если нет анимации.
-            // Во время анимации текущая и новая view в состоянии STARTED.
-            // По окончании анимации новая RESUMED, а текущая DESTROYED.
-            beginTransition(provideTransition(currentChild, activeChild),
-                onStart = {
-                    activeChild?.lifecycle?.start()
-                    currentChild?.lifecycle?.pause()
-                },
-                onEnd = {
-                    currentChild?.lifecycle?.destroy()
-                    activeChild?.lifecycle?.resume()
-                },
-                changes = {
-                    currentChild?.view?.let(::removeView)
-                    activeChild?.view?.let(::addView)
-                }
-            )
-            this.currentChild = activeChild
-            this.currentSlot = slot
+        if (currentSlot == slot) return
+
+        // Создаем новый активный экран.
+        val activeChild = slot.child?.let {
+            createActiveChild(hostViewLifecycle, it)
         }
+        // Анимируем изменения. Или нет если нет анимации.
+        // Во время анимации текущая и новая view в состоянии STARTED.
+        // По окончании анимации новая RESUMED, а текущая DESTROYED.
+        beginTransition(provideTransition(currentChild, activeChild),
+            onStart = {
+                activeChild?.lifecycle?.start()
+                currentChild?.lifecycle?.pause()
+            },
+            onEnd = {
+                currentChild?.lifecycle?.destroy()
+                activeChild?.lifecycle?.resume()
+            },
+            changes = {
+                currentChild?.view?.let(::removeView)
+                activeChild?.view?.let(::addView)
+            }
+        )
+        this.currentChild = activeChild
+        this.currentSlot = slot
         validateInactive(slot)
     }
 
@@ -123,7 +132,6 @@ class SlotHostView @JvmOverloads constructor(
             else -> null
         }
     }
-
 
     /**
      * Удаляет все ранее сохраненные состаяния эранов, если они больше не находятся в slot.

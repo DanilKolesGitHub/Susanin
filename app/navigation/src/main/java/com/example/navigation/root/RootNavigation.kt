@@ -1,4 +1,4 @@
-package com.example.susanin.root
+package com.example.navigation.root
 
 import com.arkivanov.decompose.router.children.NavState
 import com.arkivanov.decompose.router.children.NavigationSource

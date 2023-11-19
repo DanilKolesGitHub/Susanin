@@ -1,4 +1,4 @@
-package com.example.susanin.root
+package com.example.navigation.root
 
 import com.arkivanov.decompose.Child
 import com.arkivanov.decompose.ComponentContext
@@ -6,12 +6,11 @@ import com.arkivanov.decompose.router.children.children
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.parcelable.ParcelableContainer
 
-fun <Instance: Any, Ui: Any> ComponentContext.root(
+fun <Instance: Any> ComponentContext.root(
     initialized: () -> Boolean,
     navigation: RootNavigation,
-    stateMapper: (state: RootHostState, children: List<Child<RootState, Instance>>) -> Ui,
     factory: (params: RootState, context: ComponentContext) -> Instance,
-): Value<Ui> {
+): Value<ChildRoot<RootState, Instance>> {
     return children(
         source = navigation,
         key = "RootNavigation",
@@ -21,7 +20,9 @@ fun <Instance: Any, Ui: Any> ComponentContext.root(
         navTransformer = { state, event -> event.transformer(state) },
         backTransformer = { _ -> null },
         onEventComplete = { _, _, _ -> },
-        stateMapper = stateMapper,
+        stateMapper = { _, children ->
+            ChildRoot(children.filterIsInstance<Child.Created<RootState, Instance>>().first())
+        },
         onStateChanged = { _, _ ->},
         childFactory = factory,
     )

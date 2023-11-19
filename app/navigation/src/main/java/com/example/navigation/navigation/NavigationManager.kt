@@ -1,10 +1,14 @@
 package com.example.navigation.navigation
 
+import android.os.Parcelable
 import com.arkivanov.decompose.router.children.NavState
+import com.example.navigation.NavigationType
 import com.example.navigation.dispatcher.NavigationDispatcher
 import com.example.navigation.dispatcher.Type
 import com.example.navigation.listener.StateListener
 import com.example.navigation.listener.StateListenersHolder
+import com.example.navigation.stack.StackNavigation
+import com.example.navigation.stack.StackNavigationHolder
 import java.util.LinkedList
 
 /**
@@ -143,6 +147,10 @@ class NavigationManager<P : Any>(
 
     internal fun <S> removeStateListener(tag: String, listener: StateListener<S>) {
         listeners.remove(tag, listener)
+    }
+
+    fun <Params: Parcelable> update(function: (List<Params>) -> List<Params>) {
+        ((findHolder(NavigationType.STACK.name) as StackNavigationHolder<Params>).navigation as StackNavigation<Params>).update(function)
     }
 
     private companion object {

@@ -13,7 +13,7 @@ import com.arkivanov.essenty.lifecycle.pause
 import com.arkivanov.essenty.lifecycle.resume
 import com.arkivanov.essenty.lifecycle.start
 import com.example.navigation.view.HostView
-import com.example.navigation.view.TransitionProvider
+import com.example.navigation.view.UiParams
 import com.example.navigation.view.ViewRender
 import com.example.navigation.view.addCallbacks
 
@@ -24,6 +24,7 @@ class RootHostView @JvmOverloads constructor(
 ) : HostView(context, attrs, defStyleAttr) {
 
     private var currentRoot: ChildRoot<*, *>? = null
+    private var currentChild: ActiveChild<*, *>? = null
 
     /**
      * Подписывается на изменение ChildSlot<C, T> и отрисовывает View.
@@ -34,14 +35,14 @@ class RootHostView @JvmOverloads constructor(
      * @param slot Источник ChildSlot
      * @param hostViewLifecycle Родительский ЖЦ в котором находится SlotHostView.
      * Нужен для создания дочерних view. Если умирает, то и все дочерние тоже умирают.
-     * @param transitionProvider Анимация изменений в SlotHostView.
+     * @param uiParams Анимация изменений в SlotHostView.
      */
     fun <C : Any, T : ViewRender> observe(
         root: Value<ChildRoot<C, T>>,
         hostViewLifecycle: Lifecycle,
-        transitionProvider: TransitionProvider? = null,
+        uiParams: UiParams? = null,
     ) {
-        this.transitionProvider = transitionProvider
+        this.uiParams = uiParams
         // Если родитель умирает останавливаем анимацию.
         hostViewLifecycle.doOnDestroy { endTransition() }
         // Реагируем на изменения только в состоянии STARTED и выше.
@@ -121,5 +122,13 @@ class RootHostView @JvmOverloads constructor(
         startViewTransition(backView)
         transition.addCallbacks(onEnd = { endViewTransition(backView) })
         return transition
+    }
+
+    override fun saveActive() {
+        saveActive(currentChild)
+    }
+
+    override fun restoreActive() {
+        restoreActive(currentChild)
     }
 }

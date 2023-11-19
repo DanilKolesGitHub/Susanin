@@ -18,7 +18,7 @@ import com.example.navigation.screens.ScreenParams
 import com.example.navigation.screens.ViewScreen
 import com.example.navigation.screens.pages
 import com.example.navigation.transaction.transaction
-import com.example.navigation.view.ForwardBackwardTransition
+import com.example.navigation.view.OverlayTransition
 
 class TabScreen(context: ScreenContext, type: TabScreenParams): ViewScreen<TabScreenParams>(context, type) {
 
@@ -51,7 +51,7 @@ class TabScreen(context: ScreenContext, type: TabScreenParams): ViewScreen<TabSc
 
     override fun onViewCreated(view: View) {
         val host: PagesHostView = view.findViewById(R.id.tab_page_host)
-        host.observe(pages, viewLifecycle, ForwardBackwardTransition)
+        host.observe(pages, viewLifecycle, OverlayTransition)
         pages.observe(viewLifecycle) {
             val newId = findMenuId(it.items[it.selectedIndex].configuration)
             menuItems.forEach { item ->

@@ -1,4 +1,4 @@
-package com.example.susanin.root
+package com.example.navigation.root
 
 import android.os.Parcelable
 import com.arkivanov.decompose.router.children.ChildNavState
@@ -16,7 +16,5 @@ data class RootHostState(
         SimpleChildNavState(RootState.Content, if (initialized) ChildNavState.Status.ACTIVE else ChildNavState.Status.DESTROYED),
     )
 }
-
-enum class RootState {
-    Splash, Content
-}
+@Parcelize
+enum class RootState : Parcelable { Splash, Content }

@@ -1,10 +1,8 @@
 package com.example.navigation.stack
 
-import android.animation.Animator
-import android.animation.AnimatorSet
 import android.content.Context
 import android.util.AttributeSet
-import com.arkivanov.decompose.Child
+import androidx.transition.Transition
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.Value
@@ -13,7 +11,7 @@ import com.arkivanov.essenty.lifecycle.*
 import com.example.navigation.view.*
 import java.util.LinkedList
 
-class StackHostView @JvmOverloads constructor(
+class StackHostView2 @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -85,7 +83,7 @@ class StackHostView @JvmOverloads constructor(
 
         if (currentStack == stack) return
 
-        val (activeChildren, insertedChildren, removedChildren) = createActiveChildren(hostViewLifecycle, stack)
+        val (activeChildren, removedChildren) = createActiveChildren(hostViewLifecycle, stack)
         val activeChild = activeChildren.last() // Новый верхний экран.
         if (currentChild == null) {
             // Предыдущего не было. Просто добавляем новые экраны.
@@ -96,30 +94,38 @@ class StackHostView @JvmOverloads constructor(
             // Верхний является активным, переводим его в RESUMED.
             activeChild.lifecycle.resume()
         } else {
-            removedChildren.forEach {
-                // Если текущий экран остался в stack сохраняем его состояние.
-                if (isInBackStack(stack, it)) {
-                    saveActive(it)
-                }
-            }
+            saveRemovedChildren(removedChildren, stack)
             // Новый экран был в стеке, поэтому проигрываем анимацию текущего в обратную сторону.
             val activeFromStack = isInBackStack(currentStack, activeChild)
             // Анимируем изменения. Или нет если нет анимации.
             // Во время анимации текущая и новая view в состоянии STARTED.
             // По окончании анимации новая RESUMED, а текущая DESTROYED.
-            beginTransition(
-                provideAnimator = { provideTransition(currentChild, activeChild, removedChildren, insertedChildren, activeFromStack) },
-                add = { add(activeFromStack, activeChildren) },
-                remove = { remove(removedChildren) },
+            beginTransition(provideTransition(currentChild, activeChild, activeFromStack),
                 onStart = {
-                    removedChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::pause)
-                    currentChild.lifecycle.pause()
                     activeChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::start)
+                    removedChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::pause)
                 },
                 onEnd = {
                     removedChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::destroy)
+                    currentChild.lifecycle.pause()
                     activeChild.lifecycle.resume()
                 },
+                changes = {
+                    removedChildren.map(ActiveChild<*,*>::view).forEach(::removeView)
+                    activeChildren.forEachIndexed { index, activeChild ->
+                        // добавляем новые view или двигаем на новую позицию
+                        val currentIndex = indexOfChild(activeChild.view)
+                        if (currentIndex >= 0) {
+                            if (currentIndex != index) {
+                                // двигаем view на новую позицию
+                                removeViewAt(currentIndex)
+                                addView(activeChild.view, index)
+                            } // иначе view на своем месте
+                        } else { // иначе добавляем новую view
+                            addView(activeChild.view, index)
+                        }
+                    }
+                }
             )
         }
         this.currentChildren = activeChildren
@@ -143,28 +149,43 @@ class StackHostView @JvmOverloads constructor(
      * @return
      * activeChildren - список всех view, которые должны, быть в StackHostView. Причем некоторые из них могут быть уже добавлены.
      * removedChildren - список всех view, которые должны быть удалены из StackHostView.
-     *
      */
     private fun<C : Any, T : ViewRender> createActiveChildren(
         hostViewLifecycle: Lifecycle,
         stack: ChildStack<C, T>,
-    ): Triple<List<ActiveChild<C, T>>, Collection<ActiveChild<C, T>>, Collection<ActiveChild<C, T>>> {
+    ): Pair<List<ActiveChild<C, T>>, Collection<ActiveChild<C, T>>> {
         val activeChildren = LinkedList<ActiveChild<C, T>>()
-        val insertedChildren = LinkedList<ActiveChild<C, T>>()
         val currentMap = currentChildren.associateByTo(LinkedHashMap(), ActiveChild<*,*>::id) { it as ActiveChild<C, T> }
-        val overlayed = LinkedList<Child.Created<C, T>>()
         for (i in stack.items.indices.reversed()) {
             val item = stack.items[i]
-            overlayed.addFirst(item) // поскольку итерируемся с конца, то добавляем в начало
-            if (!item.overlay) break
-        }
-        overlayed.forEach { item ->
-            val child = currentMap.remove(item.id()) ?:
-                    createActiveChild(hostViewLifecycle, item).also(insertedChildren::add)
-            activeChildren.add(child)
+            val child = currentMap.remove(item.id()) ?: createActiveChild(hostViewLifecycle, item)
+            activeChildren.addFirst(child) // поскольку итерируемся с конца, то добавляем в начало
+            if (!child.overlay) break
         }
         val removedChildren = currentMap.values
-        return Triple(activeChildren, insertedChildren, removedChildren)
+        return Pair(activeChildren, removedChildren)
+    }
+
+    /**
+     * Сохраняем состояния view, которые остались stack, но удалены из HostView.
+     * Поскольку к ним можно вернуться.
+     * В таком случае состояние будет восстановлено.
+     *
+     * @param removed Cписок удаляемых View.
+     * @param stack Новый stack.
+     */
+    private fun<C : Any, T : ViewRender> saveRemovedChildren(
+        removed: Collection<ActiveChild<C, T>>,
+        stack: ChildStack<C, T>,
+    ) {
+        // Параметры, которые находятся в stack.
+        val backStack = stack.backStack.asSequence().map { it.configuration }.toSet()
+        // Если текущий экран остался в stack сохраняем его состояние.
+        removed.asSequence()
+            .filter { backStack.contains(it.child.configuration) }
+            .forEach {
+                saveActive(it)
+            }
     }
 
     /**
@@ -179,39 +200,16 @@ class StackHostView @JvmOverloads constructor(
     private fun provideTransition(
         current: ActiveChild<*, *>,
         active: ActiveChild<*, *>,
-        removedChildren: Collection<ActiveChild<*, *>>,
-        insertedChildren: Collection<ActiveChild<*, *>>,
         back: Boolean
-    ): Animator? {
-        val transition = if (back) current.viewTransition else active.viewTransition
+    ): Transition? {
+        val transition = if (back) current.transition else active.transition
         transition ?: return null
-        val animations = LinkedList<Animator?>()
-        if (!back) {
-            animations += transition.enterThis(active.view, this)
-            insertedChildren.asSequence()
-                .filter { it.id != current.id && it.id != active.id }
-                .forEach { animations += transition.enterThis(it.view, this) }
-            animations += transition.exitOther(current.view, this)
-            removedChildren.asSequence()
-                .filter { it.id != current.id && it.id != active.id }
-                .forEach { animations += transition.exitOther(it.view, this) }
-        } else {
-            animations += transition.enterOther(active.view, this)
-            insertedChildren.asSequence()
-                .filter { it.id != current.id && it.id != active.id }
-                .forEach { animations += transition.enterOther(it.view, this) }
-            animations += transition.exitThis(current.view, this)
-            removedChildren.asSequence()
-                .filter { it.id != current.id && it.id != active.id }
-                .forEach { animations += transition.exitThis(it.view, this) }
-        }
-        return animations.filterNotNull().run {
-            if (isNotEmpty()) {
-                AnimatorSet().also { it.playTogether(this) }
-            } else {
-                null
-            }
-        }
+        val animatedView = if (back) current.view else active.view
+        val backView = if (back) active.view else current.view
+        transition.addTarget(animatedView)
+        startViewTransition(backView)
+        transition.addCallbacks(onEnd = { endViewTransition(backView) })
+        return transition
     }
 
     /**

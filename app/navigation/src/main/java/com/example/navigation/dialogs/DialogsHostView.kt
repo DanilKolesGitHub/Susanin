@@ -1,9 +1,7 @@
 package com.example.navigation.dialogs
 
 import android.content.Context
-import android.os.Parcelable
 import android.util.AttributeSet
-import android.util.SparseArray
 import androidx.transition.Transition
 import androidx.transition.TransitionSet
 import com.arkivanov.decompose.value.ObserveLifecycleMode
@@ -17,7 +15,7 @@ import com.arkivanov.essenty.lifecycle.pause
 import com.arkivanov.essenty.lifecycle.resume
 import com.arkivanov.essenty.lifecycle.start
 import com.example.navigation.view.HostView
-import com.example.navigation.view.TransitionProvider
+import com.example.navigation.view.UiParams
 import com.example.navigation.view.ViewRender
 import java.util.LinkedList
 
@@ -30,26 +28,13 @@ class DialogsHostView @JvmOverloads constructor(
     private var currentChildren = listOf<ActiveChild<*, *>>()
     private var currentDialogs: ChildDialogs<*, *>? = null
 
-    /**
-     * Переопределяем дефолтную реализацию сохранения состояния.
-     * Нужно сохранить состояние ViewGroup и всех вложенных View.
-     */
-    override fun dispatchSaveInstanceState(container: SparseArray<Parcelable>) {
-        if (id == NO_ID) return
+    override fun saveActive() {
         currentChildren.forEach {
-            addActiveToInactive(it)
+            saveActive(it)
         }
-        container.put(id, onSaveInstanceState())
     }
 
-    /**
-     * Переопределяем дефолтную реализацию восстановления состояния.
-     * Нужно восстановить состояние активных View не из container: SparseArray<Parcelable>,
-     * а из inactiveChildren.
-     */
-    override fun dispatchRestoreInstanceState(container: SparseArray<Parcelable>) {
-        if (id == NO_ID) return
-        onRestoreInstanceState(container[id])
+    override fun restoreActive() {
         currentChildren.forEach {
             restoreActive(it)
         }
@@ -64,14 +49,14 @@ class DialogsHostView @JvmOverloads constructor(
      * @param dialogs Источник ChildDialogs
      * @param hostViewLifecycle Родительский ЖЦ в котором находится DialogsHostView.
      * Нужен для создания дочерних view. Если умирает, то и все дочерние тоже умирают.
-     * @param transitionProvider Анимация изменений в DialogsHostView.
+     * @param uiParams Анимация изменений в DialogsHostView.
      */
     fun <C : Any, T : ViewRender> observe(
         dialogs: Value<ChildDialogs<C, T>>,
         hostViewLifecycle: Lifecycle,
-        transitionProvider: TransitionProvider? = null,
+        uiParams: UiParams? = null,
     ) {
-        this.transitionProvider = transitionProvider
+        this.uiParams = uiParams
         // Если родитель умирает останавливаем анимацию.
         hostViewLifecycle.doOnDestroy { endTransition() }
         // Реагируем на изменения только в состоянии STARTED и выше.
@@ -90,7 +75,8 @@ class DialogsHostView @JvmOverloads constructor(
         endTransition()
         @Suppress("UNCHECKED_CAST")
         val currentDialogs = currentDialogs as ChildDialogs<C, T>?
-        val currentChild = currentChild as ActiveChild<C, T>?
+        @Suppress("UNCHECKED_CAST")
+        val currentChild = currentChildren.lastOrNull() as ActiveChild<C, T>?
 
         if (currentDialogs == dialogs) return
         val (activeChildren, insertedChildren, removedChildren) = createActiveChildren(hostViewLifecycle, dialogs)
@@ -124,7 +110,6 @@ class DialogsHostView @JvmOverloads constructor(
             }
         )
         this.currentChildren = activeChildren
-        this.currentChild = activeChildren.lastOrNull()
         this.currentDialogs = dialogs
         validateInactive(null)
     }

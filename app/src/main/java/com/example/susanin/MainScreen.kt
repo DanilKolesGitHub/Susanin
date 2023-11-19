@@ -4,27 +4,46 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.example.navigation.DialogScreenParams
-import com.example.navigation.InputScreenParams
 import com.example.navigation.MainScreenParams
+import com.example.navigation.OverlayScreenParams
 import com.example.navigation.SearchScreenParams
 import com.example.navigation.TabScreenParams
+import com.example.navigation.TestScreenParams
 import com.example.navigation.context.ScreenContext
-import com.example.navigation.dialogs.dialogs
-import com.example.navigation.dialogs.DialogsHostView
 import com.example.navigation.dialogs.dialogs
 import com.example.navigation.factory.ScreenFactory
 import com.example.navigation.register.ScreenRegister
 import com.example.navigation.screens.Screen
 import com.example.navigation.screens.ViewScreen
+import com.example.navigation.screens.dialogs
+import com.example.navigation.screens.stack
+import com.example.navigation.stack.StackHostView
 import com.example.navigation.stack.stack
 
 class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, MainScreenParams) {
 
+    init {
+        if (!Initializer.isInitialized()) error("NOT INIT")
+    }
+
+    private val stack = stack(initialProvider = {
+        listOf(
+            OverlayScreenParams(false, 0),
+            OverlayScreenParams(false, 1),
+            OverlayScreenParams(false, 2),
+        )
+    })
+    private val dialogs = dialogs(null)//DialogScreenParams(Color.BLUE))
 
     override fun onCreateView(layoutInflater: LayoutInflater, parent: ViewGroup): View {
         return layoutInflater.inflate(R.layout.activity_main, parent, false)
     }
 
+    override fun onViewCreated(view: View) {
+        super.onViewCreated(view)
+        view.findViewById<StackHostView>(R.id.stack).observe(stack, viewLifecycle)
+//        view.findViewById<DialogsHostView>(R.id.dialogs).observe(dialogs, viewLifecycle)
+    }
 }
 
 fun registerMainScreens(
@@ -52,8 +71,30 @@ fun registerMainScreens(
             }
         }
     )
-    register.registerNavigation(MainScreenParams::class){
-        stack(TabScreenParams::class, SearchScreenParams::class, InputScreenParams::class)
+    register.registerFactory(
+        OverlayScreenParams::class,
+        object : ScreenFactory<OverlayScreenParams> {
+            override fun create(
+                params: OverlayScreenParams,
+                context: ScreenContext
+            ): Screen<OverlayScreenParams> {
+                return OverlayScreen(context, params)
+            }
+        }
+    )
+    register.registerFactory(
+        TestScreenParams::class,
+        object : ScreenFactory<TestScreenParams> {
+            override fun create(
+                params: TestScreenParams,
+                context: ScreenContext
+            ): Screen<TestScreenParams> {
+                return TestScreen(context, params)
+            }
+        }
+    )
+    register.registerNavigation(MainScreenParams::class) {
+        stack(TabScreenParams::class, TestScreenParams::class, SearchScreenParams::class, OverlayScreenParams::class)
         dialogs(DialogScreenParams::class)
     }
 }

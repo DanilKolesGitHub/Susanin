@@ -1,11 +1,15 @@
 package com.example.navigation.view
 
+import android.animation.Animator
 import android.content.Context
 import android.os.Parcelable
 import android.util.AttributeSet
 import android.util.SparseArray
 import android.view.View
+import android.view.ViewParent
+import androidx.core.animation.addListener
 import androidx.core.view.ViewCompat
+import androidx.core.view.doOnLayout
 import androidx.core.view.doOnPreDraw
 import androidx.transition.Transition
 import androidx.transition.TransitionManager
@@ -15,15 +19,18 @@ import com.arkivanov.decompose.lifecycle.MergedLifecycle
 import com.arkivanov.essenty.lifecycle.*
 import kotlinx.parcelize.Parcelize
 
-open class HostView @JvmOverloads constructor(
+abstract class HostView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : CorrectFrameLayout(context, attrs, defStyleAttr) {
 
-    protected var currentChild: ActiveChild<*, *>? = null
+    // Состояния верстки view в backstack.
     private val inactiveChildren = HashMap<Parcelable, InactiveChild>()
-    protected var transitionProvider: TransitionProvider? = null
+    // Проигрываемая в данный момент анимация.
+    private var animator: Animator? = null
+    // Параметры переданные в HostView.
+    protected var uiParams: UiParams? = null
 
     /**
      * Класс который описывает текущий открытый экран.
@@ -34,12 +41,26 @@ open class HostView @JvmOverloads constructor(
         internal val view: View,
     ) {
         internal val id: Parcelable = child.id()
-        val transition: Transition?
-        get() =
-            (child.configuration as? TransitionProvider)?.transition ?:
-            (child.instance as? TransitionProvider)?.transition ?:
-            this@HostView.transitionProvider?.transition
+        internal val transition: Transition? get() = child.transition
+        internal val overlay: Boolean get() = child.overlay
+        internal val viewTransition: ViewTransition? get() = child.viewTransition
     }
+
+    protected val Child.Created<*, *>.transition: Transition? get() =
+            (configuration as? UiParams)?.transition ?:
+            (instance as? UiParams)?.transition ?:
+            this@HostView.uiParams?.transition
+
+    protected val Child.Created<*, *>.overlay: Boolean get() =
+            (configuration as? UiParams)?.overlay ?:
+            (instance as? UiParams)?.overlay ?:
+            this@HostView.uiParams?.overlay ?: false
+
+
+    protected val Child.Created<*, *>.viewTransition: ViewTransition? get() =
+        (configuration as? UiParams)?.viewTransition ?:
+        (instance as? UiParams)?.viewTransition ?:
+        this@HostView.uiParams?.viewTransition
 
     /**
      * Класс который хранит состояния предыдущих экранов.
@@ -56,8 +77,136 @@ open class HostView @JvmOverloads constructor(
         val childStates: HashMap<Parcelable, InactiveChild>,
     ) : Parcelable
 
+    /**
+     * Отмена текущей анимации.
+     */
     protected fun endTransition() {
-        TransitionManager.endTransitions(this)
+        animator?.end()
+        animator = null
+    }
+
+    /**
+     * Запускает анимацию изменения иерархии.
+     * В метод принимает add и remove лямбды.
+     * Перед началом анимации вызывается add, который добавляет новые view в иерархию.
+     * После анимации вызывается remove, который удаляет проанимированные view.
+     * Если нет анимации, то изменения происходят последовательно без анимации.
+     *
+     * Анимация запускается только после Measure и Layout новых view.
+     * Это нужно чтобы перед получением анимации у view уже были правильные размеры.
+     *
+     * @param provideAnimator Предоставляет анимацию. Вызывается после добавления новых view.
+     * @param add Добавление новых view. Используйте метод add.
+     * @param remove Удаление view. Используйте метод remove.
+     * @param onStart Вызывается перед анимацией.
+     * @param onEnd Вызывается после анимации.
+     */
+    protected fun beginTransition(
+        provideAnimator: () -> Animator?,
+        add: () -> Unit,
+        remove: () -> Unit,
+        onStart: () -> Unit,
+        onEnd: () -> Unit,
+    ) = doOnLayout {// Если на момент вызова HostView еще не isLaidOut, дожидаемся окончания.
+        add()
+        safeRequestLayout() // После добавления запрашиваем requestLayout (см. add)
+        doOnLayout {// Дожидаемся завершения добавления.
+            animator = provideAnimator()
+            if (animator == null) {
+                onStart()
+                onEnd()
+                remove()
+                safeRequestLayout() // После удаления запрашиваем requestLayout (см. remove)
+            } else {
+                animator!!.addListener(
+                    onStart = {
+                        onStart()
+                    },
+                    onEnd = {
+                        animator = null
+                        onEnd()
+                        remove()
+                        safeRequestLayout() // После удаления запрашиваем requestLayout (см. remove)
+                    },
+                )
+                animator!!.start()
+            }
+        }
+    }
+
+    /**
+     * Нужно для корректого запуска requestLayout.
+     * Если попытаться обновить иерархию во время анимации, то обычный requestLayout ничего не сделает.
+     * Поскольку отмена приводит к удалению предыдущих view и запросу requestLayout.
+     * Так как beginTransition завернут в doOnLayout, то добавление новых произойдет строго после завершения удаления.
+     * Однако view высталяет корректные флаги только после отработки всех onLayoutChange.
+     * Из-за этого requestLayout не вызывается и его нужно постить.
+     * Проблема описана тут https://www.programmersought.com/article/65791702020
+     * Код взят там же.
+     */
+    private fun View.safeRequestLayout() {
+        if (isSafeToRequestDirectly()) {
+            requestLayout()
+        } else {
+            post { requestLayout() }
+        }
+    }
+
+    private fun View.isSafeToRequestDirectly(): Boolean {
+        return if (isInLayout) {
+            isLayoutRequested.not()
+        } else {
+            var ancestorLayoutRequested = false
+            var p: ViewParent? = parent
+            while (p != null) {
+                if (p.isLayoutRequested) {
+                    ancestorLayoutRequested = true
+                    break
+                }
+                p = p.parent
+            }
+            ancestorLayoutRequested.not()
+        }
+    }
+
+    /**
+     * Добавляет view в текущую иерархию HostView.
+     * Для применения изменений вызовите requestLayout.
+     * Если добавляемая view уже есть в иерархии, то она удалится и добавится заново.
+     * @param children view которые нужно добавить.
+     * @param back Если true то новые view добавляются в начало иерархии, иначе в конец.
+     */
+    protected fun add(
+        back: Boolean,
+        children: Collection<ActiveChild<*, *>>
+    ) {
+        // чтобы не вызывать requestLayout после каждого изменения используются методы ...InLayout.
+        // если view уже добавлены в host, то удаляем их, чтобы расположить в правильном порядке.
+        children.forEach { child ->
+            removeViewInLayout(child.view)
+        }
+        children.forEachIndexed { index, child ->
+            if (back) { // если это возвращение назад, то вставляем view под текущие.
+                addViewInLayout(child.view, index, child.view.layoutParams)
+            } else { // если это добавление новых, то вставляем поверх текущих.
+                addViewInLayout(child.view, -1, child.view.layoutParams)
+            }
+        }
+    }
+
+    /**
+     * Удаляет view из текущей иерархии HostView.
+     * Для применения изменений вызовите requestLayout.
+     * @param children view которые нужно удалить.
+     */
+    protected fun remove(
+        children: Collection<ActiveChild<*, *>>
+    ) {
+        // чтобы не вызывать requestLayout после каждого изменения используются методы ...InLayout.
+        // удалем view.
+        children.forEach { child ->
+            removeViewInLayout(child.view)
+        }
     }
 
     protected fun beginTransition(
@@ -127,7 +276,8 @@ open class HostView @JvmOverloads constructor(
      * Восстанавливает состояние ActiveChild.
      * Если оно находится в inactiveChildren.
      */
-    protected fun restoreActive(active: ActiveChild<*, *>){
+    protected fun restoreActive(active: ActiveChild<*, *>?){
+        active ?: return
         val inactiveChild: InactiveChild? = inactiveChildren[active.id]
         if (inactiveChild != null) {
             active.view.restoreHierarchyState(inactiveChild.savedState)
@@ -138,7 +288,7 @@ open class HostView @JvmOverloads constructor(
      * Сохраняет состояние ActiveChild.
      * Добавляет в inactiveChildren.
      */
-    protected fun addActiveToInactive(
+    protected fun saveActive(
         active: ActiveChild<*, *>?,
     ) {
         if (active == null) return
@@ -153,7 +303,7 @@ open class HostView @JvmOverloads constructor(
      */
     override fun dispatchSaveInstanceState(container: SparseArray<Parcelable>) {
         if (id == NO_ID) return
-        addActiveToInactive(currentChild)
+        saveActive()
         container.put(id, onSaveInstanceState())
     }
 
@@ -165,8 +315,7 @@ open class HostView @JvmOverloads constructor(
     override fun dispatchRestoreInstanceState(container: SparseArray<Parcelable>) {
         if (id == NO_ID) return
         onRestoreInstanceState(container[id])
-        val active = currentChild ?: return
-        restoreActive(active)
+        restoreActive()
     }
 
     override fun onSaveInstanceState(): Parcelable? {
@@ -182,6 +331,22 @@ open class HostView @JvmOverloads constructor(
         inactiveChildren.clear()
         inactiveChildren.putAll(savedState.childStates)
     }
+
+    /**
+     * Вызывается в момент сохранения состояния HostView.
+     * Внутри нужно сохранить все активные View.
+     * Используй метод saveActive(ActiveChild)
+     * @see saveActive(ActiveChild)
+     */
+    protected abstract fun saveActive()
+
+    /**
+     * Вызывается в момент восстановления состояния HostView.
+     * Внутри нужно восстановить все активные View.
+     * Используй метод restoreActive(ActiveChild)
+     * @see restoreActive(ActiveChild)
+     */
+    protected abstract fun restoreActive()
 
     protected companion object {
 
