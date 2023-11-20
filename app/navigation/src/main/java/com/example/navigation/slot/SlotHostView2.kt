@@ -1,9 +1,10 @@
 package com.example.navigation.slot
 
-import android.animation.Animator
-import android.animation.AnimatorSet
 import android.content.Context
 import android.util.AttributeSet
+import androidx.transition.Transition
+import androidx.transition.TransitionSet
+import androidx.transition.TransitionSet.ORDERING_SEQUENTIAL
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.Value
@@ -11,7 +12,7 @@ import com.arkivanov.decompose.value.observe
 import com.arkivanov.essenty.lifecycle.*
 import com.example.navigation.view.*
 
-class SlotHostView @JvmOverloads constructor(
+class SlotHostView2 @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -83,14 +84,7 @@ class SlotHostView @JvmOverloads constructor(
         // Анимируем изменения. Или нет если нет анимации.
         // Во время анимации текущая и новая view в состоянии STARTED.
         // По окончании анимации новая RESUMED, а текущая DESTROYED.
-        beginTransition(
-            provideAnimator = { provideTransition(currentChild, activeChild) },
-            add = {
-                activeChild?.let { add(false, it) }
-            },
-            remove = {
-                currentChild?.let { remove(it) }
-            },
+        beginTransition(provideTransition(currentChild, activeChild),
             onStart = {
                 activeChild?.lifecycle?.start()
                 currentChild?.lifecycle?.pause()
@@ -99,6 +93,10 @@ class SlotHostView @JvmOverloads constructor(
                 currentChild?.lifecycle?.destroy()
                 activeChild?.lifecycle?.resume()
             },
+            changes = {
+                currentChild?.view?.let(::removeView)
+                activeChild?.view?.let(::addView)
+            }
         )
         this.currentChild = activeChild
         this.currentSlot = slot
@@ -116,15 +114,21 @@ class SlotHostView @JvmOverloads constructor(
     private fun provideTransition(
         current: ActiveChild<*, *>?,
         active: ActiveChild<*, *>?,
-    ): Animator? {
-        val currentTransition = current?.viewTransition?.exitThis(current.view, this)
-        val activeTransition = active?.viewTransition?.enterThis(active.view, this)
+    ): Transition? {
+        val currentTransition = current?.let {
+            it.transition?.addTarget(it.view)
+        }
+        val activeTransition = active?.let {
+            it.transition?.addTarget(it.view)
+        }
         return when {
             currentTransition != null && activeTransition == null -> currentTransition
             currentTransition == null && activeTransition != null -> activeTransition
-            currentTransition != null && activeTransition != null -> AnimatorSet().apply {
-                    playTogether(currentTransition, activeTransition)
-                }
+            currentTransition != null && activeTransition != null ->
+                TransitionSet()
+                    .setOrdering(ORDERING_SEQUENTIAL)
+                    .addTransition(currentTransition)
+                    .addTransition(activeTransition)
             else -> null
         }
     }

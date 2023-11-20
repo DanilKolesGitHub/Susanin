@@ -21,16 +21,18 @@
 <!--        android:layout_height="wrap_content"-->
 <!--        android:textSize="50sp"/>-->
 
-    <com.example.navigation.stack.StackHostView
-        android:id="@+id/stack"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
-
-<!--    <com.example.navigation.slot.SlotHostView-->
-<!--        android:id="@+id/player_slot"-->
+<!--    <com.example.navigation.stack.StackHostView-->
+<!--        android:id="@+id/stack"-->
 <!--        android:layout_width="match_parent"-->
 <!--        android:layout_height="match_parent"/>-->
+
+
+    <com.example.navigation.slot.SlotHostView
+        android:id="@+id/slot"
+        android:layout_gravity="bottom"
+        android:background="#00FF00"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
 
 <!--    <com.example.navigation.dialogs.DialogsHostView-->

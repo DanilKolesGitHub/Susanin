@@ -1,5 +1,6 @@
 package com.example.susanin
 
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
@@ -7,6 +8,7 @@ import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.TextView
 import com.arkivanov.essenty.lifecycle.doOnPause
 import com.arkivanov.essenty.lifecycle.doOnResume
@@ -22,7 +24,12 @@ class OverlayScreen(context: ScreenContext, type: OverlayScreenParams): ViewScre
         inflater: LayoutInflater,
         container: ViewGroup,
     ): View {
-        return inflater.inflate(R.layout.overlay_screen, container, false)
+        return inflater.inflate(R.layout.overlay_screen, container, false).apply {
+            layoutParams = FrameLayout.LayoutParams(layoutParams).apply {
+                height = 1000 + params.id*100
+                gravity = Gravity.BOTTOM
+            }
+        }
     }
 
     var lc: TextView? = null

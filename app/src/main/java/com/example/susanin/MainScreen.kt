@@ -16,8 +16,10 @@ import com.example.navigation.register.ScreenRegister
 import com.example.navigation.screens.Screen
 import com.example.navigation.screens.ViewScreen
 import com.example.navigation.screens.dialogs
+import com.example.navigation.screens.slot
 import com.example.navigation.screens.stack
-import com.example.navigation.stack.StackHostView
+import com.example.navigation.slot.SlotHostView
+import com.example.navigation.slot.slot
 import com.example.navigation.stack.stack
 
 class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, MainScreenParams) {
@@ -34,6 +36,7 @@ class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, 
         )
     })
     private val dialogs = dialogs(null)//DialogScreenParams(Color.BLUE))
+    private val slot = slot(OverlayScreenParams(false, 0))//DialogScreenParams(Color.BLUE))
 
     override fun onCreateView(layoutInflater: LayoutInflater, parent: ViewGroup): View {
         return layoutInflater.inflate(R.layout.activity_main, parent, false)
@@ -41,7 +44,8 @@ class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, 
 
     override fun onViewCreated(view: View) {
         super.onViewCreated(view)
-        view.findViewById<StackHostView>(R.id.stack).observe(stack, viewLifecycle)
+//        view.findViewById<StackHostView>(R.id.stack).observe(stack, viewLifecycle)
+        view.findViewById<SlotHostView>(R.id.slot).observe(slot, viewLifecycle)
 //        view.findViewById<DialogsHostView>(R.id.dialogs).observe(dialogs, viewLifecycle)
     }
 }
@@ -94,7 +98,8 @@ fun registerMainScreens(
         }
     )
     register.registerNavigation(MainScreenParams::class) {
-        stack(TabScreenParams::class, TestScreenParams::class, SearchScreenParams::class, OverlayScreenParams::class)
+        stack(TabScreenParams::class, TestScreenParams::class, SearchScreenParams::class)
         dialogs(DialogScreenParams::class)
+        slot(OverlayScreenParams::class)
     }
 }

@@ -194,6 +194,20 @@ abstract class HostView @JvmOverloads constructor(
         }
     }
 
+    protected fun add(
+        back: Boolean,
+        child: ActiveChild<*, *>
+    ) {
+        // чтобы не вызывать requestLayout после каждого изменения используются методы ...InLayout.
+        // если view уже добавлены в host, то удаляем их, чтобы расположить в правильном порядке.
+        removeViewInLayout(child.view)
+        if (back) { // если это возвращение назад, то вставляем view под текущие.
+            addViewInLayout(child.view, 0, child.view.layoutParams)
+        } else { // если это добавление новых, то вставляем поверх текущих.
+            addViewInLayout(child.view, -1, child.view.layoutParams)
+        }
+    }
+
     /**
      * Удаляет view из текущей иерархии HostView.
      * Для применения изменений вызовите requestLayout.
@@ -207,6 +221,14 @@ abstract class HostView @JvmOverloads constructor(
         children.forEach { child ->
             removeViewInLayout(child.view)
         }
+    }
+
+    protected fun remove(
+        child: ActiveChild<*, *>
+    ) {
+        // чтобы не вызывать requestLayout после каждого изменения используются методы ...InLayout.
+        // удалем view.
+        removeViewInLayout(child.view)
     }
 
     protected fun beginTransition(
