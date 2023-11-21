@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.content.Context
 import android.os.Parcelable
 import android.util.AttributeSet
+import android.util.Log
 import android.util.SparseArray
 import android.view.View
 import android.view.ViewParent
@@ -111,6 +112,7 @@ abstract class HostView @JvmOverloads constructor(
         add()
         safeRequestLayout() // После добавления запрашиваем requestLayout (см. add)
         doOnLayout {// Дожидаемся завершения добавления.
+            Log.d("ANDEB", "start")
             animator = provideAnimator()
             if (animator == null) {
                 onStart()
@@ -146,8 +148,10 @@ abstract class HostView @JvmOverloads constructor(
      */
     private fun View.safeRequestLayout() {
         if (isSafeToRequestDirectly()) {
+            Log.d("ANDEB", "just")
             requestLayout()
         } else {
+            Log.d("ANDEB", "post")
             post { requestLayout() }
         }
     }

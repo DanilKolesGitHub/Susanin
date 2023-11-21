@@ -18,8 +18,7 @@ import com.example.navigation.screens.ViewScreen
 import com.example.navigation.screens.dialogs
 import com.example.navigation.screens.slot
 import com.example.navigation.screens.stack
-import com.example.navigation.slot.SlotHostView
-import com.example.navigation.slot.slot
+import com.example.navigation.stack.StackHostView
 import com.example.navigation.stack.stack
 
 class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, MainScreenParams) {
@@ -30,9 +29,9 @@ class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, 
 
     private val stack = stack(initialProvider = {
         listOf(
-            OverlayScreenParams(false, 0),
-            OverlayScreenParams(false, 1),
-            OverlayScreenParams(false, 2),
+            TabScreenParams,
+//            OverlayScreenParams(false, 1),
+//            OverlayScreenParams(false, 2),
         )
     })
     private val dialogs = dialogs(null)//DialogScreenParams(Color.BLUE))
@@ -44,8 +43,8 @@ class MainScreen(context: ScreenContext): ViewScreen<MainScreenParams>(context, 
 
     override fun onViewCreated(view: View) {
         super.onViewCreated(view)
-//        view.findViewById<StackHostView>(R.id.stack).observe(stack, viewLifecycle)
-        view.findViewById<SlotHostView>(R.id.slot).observe(slot, viewLifecycle)
+        view.findViewById<StackHostView>(R.id.stack).observe(stack, viewLifecycle)
+//        view.findViewById<SlotHostView>(R.id.slot).observe(slot, viewLifecycle)
 //        view.findViewById<DialogsHostView>(R.id.dialogs).observe(dialogs, viewLifecycle)
     }
 }
@@ -98,8 +97,8 @@ fun registerMainScreens(
         }
     )
     register.registerNavigation(MainScreenParams::class) {
-        stack(TabScreenParams::class, TestScreenParams::class, SearchScreenParams::class)
+        stack(TabScreenParams::class, TestScreenParams::class, SearchScreenParams::class, OverlayScreenParams::class)
         dialogs(DialogScreenParams::class)
-        slot(OverlayScreenParams::class)
+//        slot(OverlayScreenParams::class)
     }
 }

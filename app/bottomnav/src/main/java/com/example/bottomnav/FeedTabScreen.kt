@@ -10,8 +10,9 @@ import com.example.navigation.screens.ViewScreen
 import com.example.navigation.screens.stack
 import com.example.navigation.stack.StackHostView
 import com.example.navigation.view.ForwardBackwardTransition
+import com.example.navigation.view.UiParams
 
-class FeedTabScreen(context: ScreenContext, params: FeedTabScreenParams): ViewScreen<FeedTabScreenParams>(context, params) {
+class FeedTabScreen(context: ScreenContext, params: FeedTabScreenParams): ViewScreen<FeedTabScreenParams>(context, params), UiParams {
 
     private val stack = stack(FeedScreenParams, true)
 

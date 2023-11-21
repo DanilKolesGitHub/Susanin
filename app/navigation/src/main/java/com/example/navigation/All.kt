@@ -1,9 +1,7 @@
 package com.example.navigation
 
-import androidx.transition.Transition
 import com.example.navigation.screens.ScreenParams
 import com.example.navigation.view.SlideViewTransition
-import com.example.navigation.view.TopTransition
 import com.example.navigation.view.UiParams
 import com.example.navigation.view.ViewTransition
 import kotlinx.android.parcel.Parcelize
@@ -18,10 +16,7 @@ object SplashScreenParams: ScreenParams
 object TabScreenParams: ScreenParams
 
 @Parcelize
-object FeedTabScreenParams: ScreenParams, UiParams {
-    override val transition: Transition
-        get() = TopTransition.transition
-}
+object FeedTabScreenParams: ScreenParams
 
 @Parcelize
 object VideoTabScreenParams: ScreenParams

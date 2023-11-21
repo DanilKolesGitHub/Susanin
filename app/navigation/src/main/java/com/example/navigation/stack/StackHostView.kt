@@ -104,9 +104,8 @@ class StackHostView @JvmOverloads constructor(
             }
             // Новый экран был в стеке, поэтому проигрываем анимацию текущего в обратную сторону.
             val activeFromStack = isInBackStack(currentStack, activeChild)
-            // Анимируем изменения. Или нет если нет анимации.
-            // Во время анимации текущая и новая view в состоянии STARTED.
-            // По окончании анимации новая RESUMED, а текущая DESTROYED.
+            // Во время анимации все view в состоянии STARTED.
+            // По окончании анимации верхняя RESUMED, а удаленные DESTROYED.
             beginTransition(
                 provideAnimator = { provideTransition(currentChild, activeChild, removedChildren, insertedChildren, activeFromStack) },
                 add = { add(activeFromStack, activeChildren) },
@@ -142,8 +141,8 @@ class StackHostView @JvmOverloads constructor(
      *
      * @return
      * activeChildren - список всех view, которые должны, быть в StackHostView. Причем некоторые из них могут быть уже добавлены.
+     * insertedChildren - список всех view, которые были созданы.
      * removedChildren - список всех view, которые должны быть удалены из StackHostView.
-     *
      */
     private fun<C : Any, T : ViewRender> createActiveChildren(
         hostViewLifecycle: Lifecycle,
@@ -170,11 +169,14 @@ class StackHostView @JvmOverloads constructor(
     /**
      * Предоставляет анимацию.
      * Если предыдущего экрана не было, то не анимируем появление первого экрана.
-     * Если новый эран из стека, то проигрываем анимацию удатения текущего.
+     * Если новый эран из стека, то проигрываем анимацию удаления текущего.
      * Иначе проигрываем анимацию добавления нового.
      *
      * @param current Текущий экран.
      * @param active Новый экран.
+     * @param removedChildren Удаляемые экраны.
+     * @param insertedChildren Добавленные экраны.
+     * @param back Возврат назад по стеку.
      */
     private fun provideTransition(
         current: ActiveChild<*, *>,

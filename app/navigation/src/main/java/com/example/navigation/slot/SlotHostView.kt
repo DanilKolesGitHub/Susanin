@@ -81,8 +81,8 @@ class SlotHostView @JvmOverloads constructor(
             createActiveChild(hostViewLifecycle, it)
         }
         // Анимируем изменения. Или нет если нет анимации.
-        // Во время анимации текущая и новая view в состоянии STARTED.
-        // По окончании анимации новая RESUMED, а текущая DESTROYED.
+        // Во время анимации все view в состоянии STARTED.
+        // По окончании анимации верхняя RESUMED, а удаленные DESTROYED.
         beginTransition(
             provideAnimator = { provideTransition(currentChild, activeChild) },
             add = {
@@ -135,6 +135,6 @@ class SlotHostView @JvmOverloads constructor(
      * @param slot Новый ChildSlot
      */
     private fun validateInactive(slot: ChildSlot<*, *>) {
-        validateInactive(if (slot.child != null) setOf(slot.child!!) else setOf())
+        validateInactive(if (slot.child != null) setOf(slot.child!!) else null)
     }
 }

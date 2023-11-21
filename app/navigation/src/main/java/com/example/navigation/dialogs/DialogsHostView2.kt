@@ -1,9 +1,9 @@
 package com.example.navigation.dialogs
 
-import android.animation.Animator
-import android.animation.AnimatorSet
 import android.content.Context
 import android.util.AttributeSet
+import androidx.transition.Transition
+import androidx.transition.TransitionSet
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.observe
@@ -19,7 +19,7 @@ import com.example.navigation.view.UiParams
 import com.example.navigation.view.ViewRender
 import java.util.LinkedList
 
-class DialogsHostView @JvmOverloads constructor(
+class DialogsHostView2 @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -83,34 +83,37 @@ class DialogsHostView @JvmOverloads constructor(
         // Анимируем изменения. Или нет если нет анимации.
         // Во время анимации текущая и новая view в состоянии STARTED.
         // По окончании анимации новая RESUMED, а текущая DESTROYED.
-        beginTransition(
-            provideAnimator = { provideTransition(removedChildren, insertedChildren) },
-            add = { add(false, activeChildren) },
-            remove = { remove(removedChildren) },
+        beginTransition(provideTransition(removedChildren, insertedChildren),
             onStart = {
-                removedChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::pause)
-                currentChild?.lifecycle?.pause()
                 activeChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::start)
+                removedChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::pause)
             },
             onEnd = {
                 removedChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::destroy)
+                currentChild?.lifecycle?.pause()
                 activeChildren.lastOrNull()?.lifecycle?.resume()
             },
+            changes = {
+                removedChildren.map(ActiveChild<*,*>::view).forEach(::removeView)
+                activeChildren.forEachIndexed { index, activeChild ->
+                    // добавляем новые вью или двигаем на новую позицию
+                    val currentIndex = indexOfChild(activeChild.view)
+                    if (currentIndex >= 0) {
+                        if (currentIndex != index) {
+                            removeViewAt(currentIndex)
+                            addView(activeChild.view, index)
+                        } // иначе вью на своем месте
+                    } else { // иначе добавляем новую вью
+                        addView(activeChild.view, index)
+                    }
+                }
+            }
         )
         this.currentChildren = activeChildren
         this.currentDialogs = dialogs
         validateInactive(null)
     }
 
-    /**
-     * Создаем активные экраны для новых диалогов.
-     * Причем если view экрана уже есть, то она переиспользуется.
-     *
-     * @return
-     * activeChildren - список всех view, которые должны, быть в DialogsHostView. Причем некоторые из них могут быть уже добавлены.
-     * insertedChildren - список всех view, которые были созданы.
-     * removedChildren - список всех view, которые должны быть удалены из DialogsHostView.
-     */
     private fun<C : Any, T : ViewRender> createActiveChildren(
         hostViewLifecycle: Lifecycle,
         dialogs: ChildDialogs<C, T>,
@@ -130,24 +133,29 @@ class DialogsHostView @JvmOverloads constructor(
 
     /**
      * Предоставляет анимацию.
+     * Для каждого экрана использует соответствующую анимацию открытия и закрытия.
+     * Конечно если экраны существуют.
      *
-     * @param removedChildren Удаляемые экраны.
-     * @param insertedChildren Добавленные экраны.
+     * @param current Текущиие экраны, которые нужно закрыть.
+     * @param active Новые экраны, которые нужно открыть.
      */
     private fun provideTransition(
-        removedChildren: Collection<ActiveChild<*, *>>,
-        insertedChildren: Collection<ActiveChild<*, *>>,
-    ): Animator? {
-        val animations = LinkedList<Animator?>()
-        insertedChildren.asSequence()
-            .forEach { animations += it.viewTransition?.enterThis(it.view, this) }
-        removedChildren.asSequence()
-            .forEach { animations += it.viewTransition?.exitThis(it.view, this) }
-        return animations.filterNotNull().run {
-            if (isNotEmpty()) {
-                AnimatorSet().also { it.playTogether(this) }
-            } else {
-                null
+        current: Collection<ActiveChild<*, *>>,
+        active: Collection<ActiveChild<*, *>>,
+    ): Transition? {
+        val currentTransition = current.mapNotNull {
+            it.transition?.addTarget(it.view)
+        }
+        val activeTransition = active.mapNotNull {
+            it.transition?.addTarget(it.view)
+        }
+        return if (currentTransition.isEmpty() && activeTransition.isEmpty()) {
+            null
+        } else {
+            TransitionSet().apply {
+                ordering = TransitionSet.ORDERING_TOGETHER
+                currentTransition.forEach(::addTransition)
+                activeTransition.forEach(::addTransition)
             }
         }
     }

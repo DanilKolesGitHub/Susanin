@@ -13,7 +13,7 @@ import kotlinx.android.parcel.Parcelize
 
 interface UiParams {
     val transition: Transition? get() = null
-    val overlay: Boolean get() = false
+    val overlay: Boolean? get() = false
     val viewTransition: ViewTransition? get() = null
 }
 
@@ -83,7 +83,7 @@ object FadeViewTransition: ViewTransition {
     }
 }
 
-val DURATION = 3000L
+val DURATION = 300L
 
 object SlideViewTransition: ViewTransition {
     override fun enterThis(view: View, parent: ViewGroup): Animator? {
@@ -91,11 +91,11 @@ object SlideViewTransition: ViewTransition {
             duration = DURATION
         }
     }
-    override fun exitThis(view: View, parent: ViewGroup): Animator? {
-        return ObjectAnimator.ofFloat(view, View.TRANSLATION_X, 0f, view.width.toFloat()).apply {
-            duration = DURATION
-        }
-    }
+//    override fun exitThis(view: View, parent: ViewGroup): Animator? {
+//        return ObjectAnimator.ofFloat(view, View.TRANSLATION_X, 0f, view.width.toFloat()).apply {
+//            duration = DURATION
+//        }
+//    }
 
     override fun enterOther(view: View, parent: ViewGroup): Animator? {
         return ObjectAnimator.ofFloat(view, View.TRANSLATION_X, -view.width.toFloat(), 0f).apply {
@@ -103,11 +103,11 @@ object SlideViewTransition: ViewTransition {
         }
     }
 
-    override fun exitOther(view: View, parent: ViewGroup): Animator? {
-        return ObjectAnimator.ofFloat(view, View.TRANSLATION_X, 0f, -view.width.toFloat()).apply {
-            duration = DURATION
-        }
-    }
+//    override fun exitOther(view: View, parent: ViewGroup): Animator? {
+//        return ObjectAnimator.ofFloat(view, View.TRANSLATION_X, 0f, -view.width.toFloat()).apply {
+//            duration = DURATION
+//        }
+//    }
 }
 
 @Parcelize
@@ -132,4 +132,5 @@ object BottomUpTransition: UiParams, Parcelable {
 object OverlayTransition: UiParams, Parcelable {
     override val transition: Transition get() = Slide(Gravity.END)
     override val overlay: Boolean get() = true
+    override val viewTransition: ViewTransition get() = SlideViewTransition
 }

@@ -1,9 +1,8 @@
 package com.example.navigation.pages
 
-import android.animation.Animator
-import android.animation.AnimatorSet
 import android.content.Context
 import android.util.AttributeSet
+import androidx.transition.Transition
 import com.arkivanov.decompose.Child
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.router.pages.ChildPages
@@ -14,10 +13,11 @@ import com.arkivanov.essenty.lifecycle.*
 import com.example.navigation.view.HostView
 import com.example.navigation.view.UiParams
 import com.example.navigation.view.ViewRender
+import com.example.navigation.view.addCallbacks
 import java.util.LinkedList
 
 @OptIn(ExperimentalDecomposeApi::class)
-class PagesHostView @JvmOverloads constructor(
+class PagesHostView2 @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -48,6 +48,7 @@ class PagesHostView @JvmOverloads constructor(
             restoreActive(it)
         }
     }
+
 
     /**
      * Подписывается на изменение ChildPages<C, T> и отрисовывает View.
@@ -96,7 +97,7 @@ class PagesHostView @JvmOverloads constructor(
 
         if (currentPages == pages) return
 
-        val (activeChildren, insertedChildren, removedChildren) = createActiveChildren(hostViewLifecycle, pages)
+        val (activeChildren, removedChildren) = createActiveChildren(hostViewLifecycle, pages)
         val activeChild = activeChildren.last() // Новый выбранный экран.
         if (currentChild == null) {
             // Предыдущего не было. Просто добавляем новые экраны.
@@ -113,23 +114,30 @@ class PagesHostView @JvmOverloads constructor(
                     saveActive(it)
                 }
             }
-            // Если индекс нового элемента меньше текущего, то проигрываем обратную анимацию.
-            val back = (currentPages?.selectedIndex ?: 0) > pages.selectedIndex
-            // Во время анимации все view в состоянии STARTED.
-            // По окончании анимации верхняя RESUMED, а удаленные DESTROYED.
-            beginTransition(
-                provideAnimator = { provideTransition(currentChild, activeChild, removedChildren, insertedChildren, back) },
-                add = { add(false, activeChildren) },
-                remove = { remove(removedChildren) },
+            beginTransition(provideTransition(currentChild, activeChild),
                 onStart = {
-                    removedChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::pause)
-                    currentChild.lifecycle.pause()
                     activeChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::start)
+                    removedChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::pause)
                 },
                 onEnd = {
                     removedChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::destroy)
+                    currentChild.lifecycle.pause()
                     activeChild.lifecycle.resume()
                 },
+                changes = {
+                    removedChildren.map(ActiveChild<*,*>::view).forEach(::removeView)
+                    val currentIndex = indexOfChild(activeChild.view)
+                    activeChildren.take(activeChildren.lastIndex).forEach {
+                        it.view.visibility = GONE
+                    }
+                    activeChild.view.visibility = VISIBLE
+                    if (currentIndex >= 0) {
+                        removeView(activeChild.view)
+                        addView(activeChild.view)
+                    } else {
+                        addView(activeChild.view)
+                    }
+                }
             )
         }
         this.currentChildren = activeChildren
@@ -158,15 +166,13 @@ class PagesHostView @JvmOverloads constructor(
     private fun<C : Any, T : ViewRender> createActiveChildren(
         hostViewLifecycle: Lifecycle,
         pages: ChildPages<C, T>,
-    ): Triple<List<ActiveChild<C, T>>, Collection<ActiveChild<C, T>>, Collection<ActiveChild<C, T>>> {
+    ): Pair<List<ActiveChild<C, T>>, Collection<ActiveChild<C, T>>> {
         val activeChildren = LinkedList<ActiveChild<C, T>>()
-        val insertedChildren = LinkedList<ActiveChild<C, T>>()
         val removedChildren = LinkedList<ActiveChild<C, T>>()
         val currentMap = currentChildren.associateByTo(LinkedHashMap(), ActiveChild<*,*>::id) { it as ActiveChild<C, T> }
         // Создаем или переиспользуем выбранный экран.
         val selectedItem = pages.items[pages.selectedIndex] as Child.Created<C, T>
-        val selectedChild = currentMap.remove(selectedItem.id()) ?:
-            createActiveChild(hostViewLifecycle, selectedItem).also(insertedChildren::add)
+        val selectedChild = currentMap.remove(selectedItem.id()) ?: createActiveChild(hostViewLifecycle, selectedItem)
         if (selectedChild.overlay) {
             // Id всех экранов в pages.
             val ids = pages.items.asSequence().map { it.id() }.toHashSet()
@@ -181,57 +187,30 @@ class PagesHostView @JvmOverloads constructor(
             removedChildren.addAll(currentMap.values)
         }
         activeChildren.add(selectedChild)
-        return Triple(activeChildren, insertedChildren, removedChildren)
+        return Pair(activeChildren, removedChildren)
     }
 
     /**
      * Предоставляет анимацию.
      * Если предыдущего экрана не было, то не анимируем появление первого экрана.
-     * Если новый эран из с меньшим индексом, то проигрываем анимацию удаления текущего.
-     * Иначе проигрываем анимацию добавления нового.
      *
      * @param current Текущий экран.
      * @param active Новый экран.
-     * @param removedChildren Удаляемые экраны.
-     * @param insertedChildren Добавленные экраны.
-     * @param back Возврат назад по pages.
      */
     private fun provideTransition(
         current: ActiveChild<*, *>,
         active: ActiveChild<*, *>,
-        removedChildren: Collection<ActiveChild<*, *>>,
-        insertedChildren: Collection<ActiveChild<*, *>>,
-        back: Boolean
-    ): Animator? {
-        val transition = if (back) current.viewTransition else active.viewTransition
-        transition ?: return null
-        val animations = LinkedList<Animator?>()
-        if (!back) {
-            animations += transition.enterThis(active.view, this)
-            insertedChildren.asSequence()
-                .filter { it.id != current.id && it.id != active.id }
-                .forEach { animations += transition.enterThis(it.view, this) }
-            animations += transition.exitOther(current.view, this)
-            removedChildren.asSequence()
-                .filter { it.id != current.id && it.id != active.id }
-                .forEach { animations += transition.exitOther(it.view, this) }
-        } else {
-            animations += transition.enterOther(active.view, this)
-            insertedChildren.asSequence()
-                .filter { it.id != current.id && it.id != active.id }
-                .forEach { animations += transition.enterOther(it.view, this) }
-            animations += transition.exitThis(current.view, this)
-            removedChildren.asSequence()
-                .filter { it.id != current.id && it.id != active.id }
-                .forEach { animations += transition.exitThis(it.view, this) }
-        }
-        return animations.filterNotNull().run {
-            if (isNotEmpty()) {
-                AnimatorSet().also { it.playTogether(this) }
-            } else {
-                null
-            }
-        }
+    ): Transition? {
+        val transition = active.transition ?: return null
+        val animatedView = active.view
+        transition.addTarget(animatedView)
+//        if (!active.overlay) {
+            val backView = current.view
+            startViewTransition(backView)
+            transition.addCallbacks(onEnd = { endViewTransition(backView) })
+//        }
+        transition.duration = 1000
+        return transition
     }
 
     /**
