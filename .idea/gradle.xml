@@ -12,15 +12,10 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/app/bottomnav" />
             <option value="$PROJECT_DIR$/app/core" />
-            <option value="$PROJECT_DIR$/app/feed" />
             <option value="$PROJECT_DIR$/app/miniplayer" />
             <option value="$PROJECT_DIR$/app/navigation" />
-            <option value="$PROJECT_DIR$/app/search" />
-            <option value="$PROJECT_DIR$/app/settings" />
             <option value="$PROJECT_DIR$/app/tree" />
-            <option value="$PROJECT_DIR$/app/video" />
           </set>
         </option>
       </GradleProjectSettings>

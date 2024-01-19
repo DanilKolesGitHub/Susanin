@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1B000000">
+
+    <LinearLayout
+        android:layout_margin="24dp"
+        android:layout_gravity="top|left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:padding="8dp"
+            android:textColor="#000000"
+            android:id="@+id/idtext"
+            android:text="qwerty"
+            android:layout_width="wrap_content"
+            android:textSize="22sp"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:padding="8dp"
+            android:textColor="#F15602"
+            android:id="@+id/ltext"
+            android:text="qwerty"
+            android:layout_width="wrap_content"
+            android:textSize="22sp"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:padding="8dp"
+            android:textColor="#00BCD4"
+            android:id="@+id/vltext"
+            android:text="qwerty"
+            android:layout_width="wrap_content"
+            android:textSize="22sp"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+    
+    <LinearLayout
+        android:id="@+id/controls"
+        android:layout_margin="24dp"
+        android:layout_gravity="bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/save_edit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"/>
+
+        <RadioGroup
+            android:id="@+id/overlayGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/overlay_true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Overlay"
+                android:checked="true"
+                android:layout_weight="1" />
+
+            <RadioButton
+                android:id="@+id/overlay_false"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Not Overlay"
+                android:layout_weight="1" />
+        </RadioGroup>
+
+        <RadioGroup
+            android:id="@+id/animateGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/animate_true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Animate"
+                android:checked="true"
+                android:layout_weight="1" />
+
+            <RadioButton
+                android:id="@+id/animate_false"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Not Animate"
+                android:layout_weight="1" />
+        </RadioGroup>
+
+        <Button
+            android:text="Next"
+            android:textColor="@color/black"
+            android:backgroundTint="@color/white"
+            android:layout_gravity="bottom"
+            android:id="@+id/next_button"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"/>
+
+
+    </LinearLayout>
+
+</FrameLayout>

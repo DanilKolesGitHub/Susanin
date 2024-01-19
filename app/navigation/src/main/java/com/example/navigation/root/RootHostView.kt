@@ -1,8 +1,9 @@
 package com.example.navigation.root
 
+import android.animation.Animator
+import android.animation.AnimatorSet
 import android.content.Context
 import android.util.AttributeSet
-import androidx.transition.Transition
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.observe
@@ -15,7 +16,6 @@ import com.arkivanov.essenty.lifecycle.start
 import com.example.navigation.view.HostView
 import com.example.navigation.view.UiParams
 import com.example.navigation.view.ViewRender
-import com.example.navigation.view.addCallbacks
 
 class RootHostView @JvmOverloads constructor(
     context: Context,
@@ -25,6 +25,14 @@ class RootHostView @JvmOverloads constructor(
 
     private var currentRoot: ChildRoot<*, *>? = null
     private var currentChild: ActiveChild<*, *>? = null
+
+    override fun saveActive() {
+        saveActive(currentChild)
+    }
+
+    override fun restoreActive() {
+        restoreActive(currentChild)
+    }
 
     /**
      * Подписывается на изменение ChildSlot<C, T> и отрисовывает View.
@@ -85,19 +93,21 @@ class RootHostView @JvmOverloads constructor(
                 // Анимируем изменения. Или нет если нет анимации.
                 // Во время анимации текущая и новая view в состоянии STARTED.
                 // По окончании анимации новая RESUMED, а текущая DESTROYED.
-                beginTransition(provideTransition(currentChild, activeChild),
+                beginTransition(
+                    addToBack = false,
+                    add = activeChild,
+                    remove = currentChild,
+                    animatorProvider = {
+                        provideTransition(currentChild, activeChild)
+                    },
                     onStart = {
-                        activeChild.lifecycle.start()
                         currentChild.lifecycle.pause()
+                        activeChild.lifecycle.start()
                     },
                     onEnd = {
                         currentChild.lifecycle.destroy()
                         activeChild.lifecycle.resume()
                     },
-                    changes = {
-                        removeView(currentChild.view)
-                        addView(activeChild.view)
-                    }
                 )
             }
         }
@@ -106,29 +116,24 @@ class RootHostView @JvmOverloads constructor(
     /**
      * Предоставляет анимацию.
      * Для каждого экрана использует соответствующую анимацию открытия и закрытия.
+     * Конечно если экраны существуют.
      *
      * @param current Текущий экран.
      * @param active Новый экран.
      */
     private fun provideTransition(
-        current: ActiveChild<*, *>,
-        active: ActiveChild<*, *>,
-    ): Transition? {
-        val transition = active.transition
-        transition ?: return null
-        val animatedView = active.view
-        val backView = current.view
-        transition.addTarget(animatedView)
-        startViewTransition(backView)
-        transition.addCallbacks(onEnd = { endViewTransition(backView) })
-        return transition
-    }
-
-    override fun saveActive() {
-        saveActive(currentChild)
-    }
-
-    override fun restoreActive() {
-        restoreActive(currentChild)
+        current: ActiveChild<*, *>?,
+        active: ActiveChild<*, *>?,
+    ): Animator? {
+        val currentTransition = current?.viewTransition?.exitThis(current.view, this)
+        val activeTransition = active?.viewTransition?.enterThis(active.view, this)
+        return when {
+            currentTransition != null && activeTransition == null -> currentTransition
+            currentTransition == null && activeTransition != null -> activeTransition
+            currentTransition != null && activeTransition != null -> AnimatorSet().apply {
+                playTogether(currentTransition, activeTransition)
+            }
+            else -> null
+        }
     }
 }

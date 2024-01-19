@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorSet
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.Value
@@ -20,10 +21,16 @@ class SlotHostView @JvmOverloads constructor(
     private var currentSlot: ChildSlot<*, *>? = null
     private var currentChild: ActiveChild<*, *>? = null
 
+    /**
+     * Сохраняем состояния текущего view.
+     */
     override fun saveActive() {
         saveActive(currentChild)
     }
 
+    /**
+     * Восстанавливаем состояния текущего view.
+     */
     override fun restoreActive() {
         restoreActive(currentChild)
     }
@@ -73,6 +80,7 @@ class SlotHostView @JvmOverloads constructor(
 
         @Suppress("UNCHECKED_CAST")
         val currentChild = currentChild as ActiveChild<C, T>?
+        Log.d("ANIMDEB", "onSlotChanged old ${currentChild?.child?.configuration} new ${slot.child?.configuration}")
 
         if (currentSlot == slot) return
 
@@ -84,16 +92,15 @@ class SlotHostView @JvmOverloads constructor(
         // Во время анимации все view в состоянии STARTED.
         // По окончании анимации верхняя RESUMED, а удаленные DESTROYED.
         beginTransition(
-            provideAnimator = { provideTransition(currentChild, activeChild) },
-            add = {
-                activeChild?.let { add(false, it) }
-            },
-            remove = {
-                currentChild?.let { remove(it) }
+            addToBack = false,
+            add = activeChild,
+            remove = currentChild,
+            animatorProvider = {
+               provideTransition(currentChild, activeChild)
             },
             onStart = {
-                activeChild?.lifecycle?.start()
                 currentChild?.lifecycle?.pause()
+                activeChild?.lifecycle?.start()
             },
             onEnd = {
                 currentChild?.lifecycle?.destroy()

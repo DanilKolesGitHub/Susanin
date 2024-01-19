@@ -5,8 +5,6 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.defaultComponentContext
-import com.example.bottomnav.registerTabScreens
-import com.example.feed.registerFeedScreens
 import com.example.miniplayer.registerPlayerScreens
 import com.example.navigation.MainScreenParams
 import com.example.navigation.context.defaultScreenContext
@@ -16,11 +14,8 @@ import com.example.navigation.root.RootHostView
 import com.example.navigation.root.RootNavigation
 import com.example.navigation.root.RootState
 import com.example.navigation.root.root
-import com.example.navigation.view.TopTransition
 import com.example.navigation.view.ViewRender
-import com.example.search.registerSearchScreens
 import com.example.tree.registerTreeScreens
-import com.example.video.registerVideoScreens
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -54,13 +49,13 @@ class RootScreen(val activity: AppCompatActivity): ComponentContext by activity.
 
     private fun createMain(componentContext: ComponentContext): ViewRender {
         val register = ScreenRegisterImpl()
-        registerTabScreens(register)
-        registerFeedScreens(register)
-        registerVideoScreens(register)
         registerTreeScreens(register)
-        registerSearchScreens(register)
         registerMainScreens(register)
         registerPlayerScreens(register)
+        registerStackScreens(register)
+        registerSlotScreens(register)
+        registerDialogsScreens(register)
+        registerSelectScreens(register)
 
         return MainScreen(
             register.defaultScreenContext(
@@ -76,7 +71,7 @@ class RootScreen(val activity: AppCompatActivity): ComponentContext by activity.
     }
 
     private fun onViewCreated(view: View) {
-        view.findViewById<RootHostView>(R.id.root_screen_host).observe(root, lifecycle, TopTransition)
+        view.findViewById<RootHostView>(R.id.root_screen_host).observe(root, lifecycle)
     }
 
 

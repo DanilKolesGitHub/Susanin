@@ -2,17 +2,10 @@ package com.example.navigation.view
 
 import android.animation.Animator
 import android.animation.ObjectAnimator
-import android.os.Parcelable
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import androidx.transition.Fade
-import androidx.transition.Slide
-import androidx.transition.Transition
-import kotlinx.android.parcel.Parcelize
 
 interface UiParams {
-    val transition: Transition? get() = null
     val overlay: Boolean? get() = false
     val viewTransition: ViewTransition? get() = null
 }
@@ -83,7 +76,7 @@ object FadeViewTransition: ViewTransition {
     }
 }
 
-val DURATION = 300L
+val DURATION = 2000L
 
 object SlideViewTransition: ViewTransition {
     override fun enterThis(view: View, parent: ViewGroup): Animator? {
@@ -91,17 +84,17 @@ object SlideViewTransition: ViewTransition {
             duration = DURATION
         }
     }
-//    override fun exitThis(view: View, parent: ViewGroup): Animator? {
-//        return ObjectAnimator.ofFloat(view, View.TRANSLATION_X, 0f, view.width.toFloat()).apply {
-//            duration = DURATION
-//        }
-//    }
-
-    override fun enterOther(view: View, parent: ViewGroup): Animator? {
-        return ObjectAnimator.ofFloat(view, View.TRANSLATION_X, -view.width.toFloat(), 0f).apply {
+    override fun exitThis(view: View, parent: ViewGroup): Animator? {
+        return ObjectAnimator.ofFloat(view, View.TRANSLATION_X, 0f, view.width.toFloat()).apply {
             duration = DURATION
         }
     }
+
+//    override fun enterOther(view: View, parent: ViewGroup): Animator? {
+//        return ObjectAnimator.ofFloat(view, View.TRANSLATION_X, -view.width.toFloat(), 0f).apply {
+//            duration = DURATION
+//        }
+//    }
 
 //    override fun exitOther(view: View, parent: ViewGroup): Animator? {
 //        return ObjectAnimator.ofFloat(view, View.TRANSLATION_X, 0f, -view.width.toFloat()).apply {
@@ -110,27 +103,27 @@ object SlideViewTransition: ViewTransition {
 //    }
 }
 
-@Parcelize
-object TopTransition: UiParams, Parcelable {
-    override val transition: Transition get() = Fade()
-    override val overlay: Boolean get() = false
-}
+object PagesViewTransition: ViewTransition {
+    override fun enterThis(view: View, parent: ViewGroup): Animator? {
+        return ObjectAnimator.ofFloat(view, View.TRANSLATION_X, view.width.toFloat(), 0f).apply {
+            duration = DURATION
+        }
+    }
+    override fun exitThis(view: View, parent: ViewGroup): Animator? {
+        return ObjectAnimator.ofFloat(view, View.TRANSLATION_X, 0f, view.width.toFloat()).apply {
+            duration = DURATION
+        }
+    }
 
-@Parcelize
-object ForwardBackwardTransition: UiParams, Parcelable {
-    override val transition: Transition get() = Slide(Gravity.END)
-    override val overlay: Boolean get() = false
-}
+    override fun enterOther(view: View, parent: ViewGroup): Animator? {
+        return ObjectAnimator.ofFloat(view, View.TRANSLATION_X, -view.width.toFloat(), 0f).apply {
+            duration = DURATION
+        }
+    }
 
-@Parcelize
-object BottomUpTransition: UiParams, Parcelable {
-    override val transition: Transition get() = Slide(Gravity.BOTTOM)
-    override val overlay: Boolean get() = false
-}
-
-@Parcelize
-object OverlayTransition: UiParams, Parcelable {
-    override val transition: Transition get() = Slide(Gravity.END)
-    override val overlay: Boolean get() = true
-    override val viewTransition: ViewTransition get() = SlideViewTransition
+    override fun exitOther(view: View, parent: ViewGroup): Animator? {
+        return ObjectAnimator.ofFloat(view, View.TRANSLATION_X, 0f, -view.width.toFloat()).apply {
+            duration = DURATION
+        }
+    }
 }

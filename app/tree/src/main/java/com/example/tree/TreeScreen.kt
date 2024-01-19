@@ -1,26 +1,26 @@
 package com.example.tree
 
-import android.graphics.Color
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import com.example.navigation.DialogScreenParams
-import com.example.navigation.InputScreenParams
 import com.example.navigation.PlayerScreenParams
-import com.example.navigation.ResultScreenParams
+import com.example.navigation.SelectScreenParams
+import com.example.navigation.TestScreenParams
 import com.example.navigation.TreeScreenParams
-import com.example.navigation.TreeTabScreenParams
 import com.example.navigation.context.ScreenContext
 import com.example.navigation.factory.ScreenFactory
+import com.example.navigation.pages.pages
 import com.example.navigation.register.ScreenRegister
 import com.example.navigation.screens.ScreenParams
 import com.example.navigation.screens.ViewScreen
-import com.example.navigation.stack.stack
 import com.example.navigation.transaction.transaction
 import com.example.navigation.tree.Tree
 import kotlin.reflect.KClass
@@ -53,10 +53,8 @@ class TreeScreen(context: ScreenContext, type: TreeScreenParams): ViewScreen<Tre
 
     private fun toParams(type: KClass<out ScreenParams>): ScreenParams?{
         return when (type) {
-            ResultScreenParams::class -> ResultScreenParams("hello")
-            InputScreenParams::class -> InputScreenParams
             PlayerScreenParams::class -> PlayerScreenParams
-            DialogScreenParams::class -> DialogScreenParams(Color.BLUE)
+            TestScreenParams::class -> TestScreenParams(0)
             else -> null
         }
     }
@@ -65,8 +63,16 @@ class TreeScreen(context: ScreenContext, type: TreeScreenParams): ViewScreen<Tre
         inflater: LayoutInflater,
         container: ViewGroup,
     ): View {
-        val layout = ComposeView(container.context)
+        val layout = ComposeView(container.context).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
         layout.setContent {
+            LaunchedEffect(Unit) {
+                Log.d("COMDEB", "launch effect")
+            }
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 TreeView(navTree, ::openNode)
             }
@@ -83,10 +89,7 @@ fun registerTreeScreens(
             return TreeScreen(context, screenType)
         }
     })
-
-    register.registerNavigation(TreeTabScreenParams) {
-        stack(
-            TreeScreenParams::class
-        )
+    register.registerNavigation(SelectScreenParams) {
+        pages(TreeScreenParams::class)
     }
 }

@@ -69,12 +69,7 @@ dependencies {
     implementation project(':app:core')
     implementation project(':app:navigation')
     implementation project(':app:miniplayer')
-    implementation project(':app:bottomnav')
-    implementation project(':app:feed')
-    implementation project(':app:video')
     implementation project(':app:tree')
-    implementation project(':app:search')
-    implementation project(':app:settings')
 
     implementation "com.arkivanov.decompose:decompose:2.0.0"
 

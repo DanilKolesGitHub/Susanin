@@ -7,13 +7,10 @@ import android.util.AttributeSet
 import android.util.Log
 import android.util.SparseArray
 import android.view.View
-import android.view.ViewParent
+import android.widget.FrameLayout
 import androidx.core.animation.addListener
 import androidx.core.view.ViewCompat
-import androidx.core.view.doOnLayout
 import androidx.core.view.doOnPreDraw
-import androidx.transition.Transition
-import androidx.transition.TransitionManager
 import com.arkivanov.decompose.Child
 import com.arkivanov.decompose.InternalDecomposeApi
 import com.arkivanov.decompose.lifecycle.MergedLifecycle
@@ -24,7 +21,7 @@ abstract class HostView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : CorrectFrameLayout(context, attrs, defStyleAttr) {
+) : FrameLayout(context, attrs, defStyleAttr) {
 
     // Состояния верстки view в backstack.
     private val inactiveChildren = HashMap<Parcelable, InactiveChild>()
@@ -42,15 +39,9 @@ abstract class HostView @JvmOverloads constructor(
         internal val view: View,
     ) {
         internal val id: Parcelable = child.id()
-        internal val transition: Transition? get() = child.transition
         internal val overlay: Boolean get() = child.overlay
         internal val viewTransition: ViewTransition? get() = child.viewTransition
     }
-
-    protected val Child.Created<*, *>.transition: Transition? get() =
-            (configuration as? UiParams)?.transition ?:
-            (instance as? UiParams)?.transition ?:
-            this@HostView.uiParams?.transition
 
     protected val Child.Created<*, *>.overlay: Boolean get() =
             (configuration as? UiParams)?.overlay ?:
@@ -86,104 +77,96 @@ abstract class HostView @JvmOverloads constructor(
         animator = null
     }
 
+    protected fun beginTransition(
+        addToBack: Boolean,
+        add: ActiveChild<*, *>?,
+        remove: ActiveChild<*, *>?,
+        animatorProvider: () -> Animator?,
+        onStart: () -> Unit,
+        onEnd: () -> Unit,
+    ) {
+        beginTransition(
+            addToBack = addToBack,
+            addChildren = listOfNotNull(add),
+            removeChildren = listOfNotNull(remove),
+            animatorProvider = animatorProvider,
+            onStart = onStart,
+            onEnd = onEnd,
+        )
+    }
+
     /**
      * Запускает анимацию изменения иерархии.
-     * В метод принимает add и remove лямбды.
-     * Перед началом анимации вызывается add, который добавляет новые view в иерархию.
-     * После анимации вызывается remove, который удаляет проанимированные view.
      * Если нет анимации, то изменения происходят последовательно без анимации.
      *
-     * Анимация запускается только после Measure и Layout новых view.
-     * Это нужно чтобы перед получением анимации у view уже были правильные размеры.
+     * Метод принимает addChildren, которые нужно добавить,
+     * и removeChildren, которые нужно удалить.
      *
-     * @param provideAnimator Предоставляет анимацию. Вызывается после добавления новых view.
-     * @param add Добавление новых view. Используйте метод add.
-     * @param remove Удаление view. Используйте метод remove.
+     * Перед началом анимации вызывается add, который добавляет новые view в иерархию.
+     * После чего метод дожидается завершения onMeasure и onLayout (см doOnReady).
+     * Это нужно чтобы перед получением анимации у view уже были правильные размеры.
+     * После анимации вызывается remove, который удаляет проанимированные view.
+     *
+     * @param addToBack true - добавить новые view под текущие, false - добавить поверх.
+     * @param addChildren View, которые нужно добавить.
+     * @param removeChildren View, которые нужно удалить.
+     * @param animatorProvider Предоставляет анимацию. Вызывается после добавления новых view.
      * @param onStart Вызывается перед анимацией.
      * @param onEnd Вызывается после анимации.
      */
     protected fun beginTransition(
-        provideAnimator: () -> Animator?,
-        add: () -> Unit,
-        remove: () -> Unit,
+        addToBack: Boolean,
+        addChildren: Collection<ActiveChild<*, *>>,
+        removeChildren: Collection<ActiveChild<*, *>>,
+        animatorProvider: () -> Animator?,
         onStart: () -> Unit,
         onEnd: () -> Unit,
-    ) = doOnLayout {// Если на момент вызова HostView еще не isLaidOut, дожидаемся окончания.
-        add()
-        safeRequestLayout() // После добавления запрашиваем requestLayout (см. add)
-        doOnLayout {// Дожидаемся завершения добавления.
-            Log.d("ANDEB", "start")
-            animator = provideAnimator()
-            if (animator == null) {
-                onStart()
-                onEnd()
-                remove()
-                safeRequestLayout() // После удаления запрашиваем requestLayout (см. remove)
-            } else {
-                animator!!.addListener(
-                    onStart = {
-                        onStart()
-                    },
-                    onEnd = {
-                        animator = null
-                        onEnd()
-                        remove()
-                        safeRequestLayout() // После удаления запрашиваем requestLayout (см. remove)
-                    },
+    ) = doOnReady {// Если на момент вызова HostView еще не isLaidOut, дожидаемся окончания.
+        add(
+            back = addToBack,
+            children = addChildren,
+        ) {
+            transition(
+                animatorProvider = animatorProvider,
+                onStart = onStart,
+                onEnd = onEnd,
+            ) {
+                remove(
+                    children = removeChildren
                 )
-                animator!!.start()
             }
         }
     }
 
     /**
-     * Нужно для корректого запуска requestLayout.
-     * Если попытаться обновить иерархию во время анимации, то обычный requestLayout ничего не сделает.
-     * Поскольку отмена приводит к удалению предыдущих view и запросу requestLayout.
-     * Так как beginTransition завернут в doOnLayout, то добавление новых произойдет строго после завершения удаления.
-     * Однако view высталяет корректные флаги только после отработки всех onLayoutChange.
-     * Из-за этого requestLayout не вызывается и его нужно постить.
-     * Проблема описана тут https://www.programmersought.com/article/65791702020
-     * Код взят там же.
+     *
      */
-    private fun View.safeRequestLayout() {
-        if (isSafeToRequestDirectly()) {
-            Log.d("ANDEB", "just")
-            requestLayout()
+    private inline fun View.doOnReady(crossinline action: (view: View) -> Unit) {
+        if (ViewCompat.isLaidOut(this) && !isLayoutRequested) {
+            action(this)
         } else {
-            Log.d("ANDEB", "post")
-            post { requestLayout() }
-        }
-    }
-
-    private fun View.isSafeToRequestDirectly(): Boolean {
-        return if (isInLayout) {
-            isLayoutRequested.not()
-        } else {
-            var ancestorLayoutRequested = false
-            var p: ViewParent? = parent
-            while (p != null) {
-                if (p.isLayoutRequested) {
-                    ancestorLayoutRequested = true
-                    break
-                }
-                p = p.parent
+            doOnPreDraw {
+                action(it)
             }
-            ancestorLayoutRequested.not()
         }
     }
 
     /**
      * Добавляет view в текущую иерархию HostView.
-     * Для применения изменений вызовите requestLayout.
      * Если добавляемая view уже есть в иерархии, то она удалится и добавится заново.
      * @param children view которые нужно добавить.
      * @param back Если true то новые view добавляются в начало иерархии, иначе в конец.
+     * @param onAdd Колбэк после добавления в иерархию.
      */
-    protected fun add(
+    private inline fun add(
         back: Boolean,
-        children: Collection<ActiveChild<*, *>>
+        children: Collection<ActiveChild<*, *>>,
+        crossinline onAdd: () -> Unit,
     ) {
+        if (children.isEmpty()) {
+            onAdd()
+            return
+        }
         // чтобы не вызывать requestLayout после каждого изменения используются методы ...InLayout.
         // если view уже добавлены в host, то удаляем их, чтобы расположить в правильном порядке.
         children.forEach { child ->
@@ -196,70 +179,62 @@ abstract class HostView @JvmOverloads constructor(
                 addViewInLayout(child.view, -1, child.view.layoutParams)
             }
         }
+        requestLayout() // После добавления запрашиваем requestLayout
+        log("add")
+        doOnReady {// Дожидаемся пока выполнится layout после добавления
+            // Тут новые view добавлены и измерены. Можно запускать анимацию.
+            onAdd()
+        }
     }
 
-    protected fun add(
-        back: Boolean,
-        child: ActiveChild<*, *>
+    /**
+     * Анимирует изменение иерархии.
+     */
+    private inline fun transition(
+        animatorProvider: () -> Animator?,
+        crossinline onStart: () -> Unit,
+        crossinline onEnd: () -> Unit,
+        crossinline onAnimated: () -> Unit,
     ) {
-        // чтобы не вызывать requestLayout после каждого изменения используются методы ...InLayout.
-        // если view уже добавлены в host, то удаляем их, чтобы расположить в правильном порядке.
-        removeViewInLayout(child.view)
-        if (back) { // если это возвращение назад, то вставляем view под текущие.
-            addViewInLayout(child.view, 0, child.view.layoutParams)
-        } else { // если это добавление новых, то вставляем поверх текущих.
-            addViewInLayout(child.view, -1, child.view.layoutParams)
+        animator = animatorProvider() // Получаем анимацию
+        if (animator == null) { //
+            onStart()
+            onEnd()
+            onAnimated()
+        } else {
+            animator!!.addListener(
+                onStart = {
+                    onStart()
+                },
+                onEnd = {
+                    animator = null
+                    onEnd()
+                    onAnimated()
+                },
+            )
+            animator!!.start()
+            log("animate")
         }
     }
 
     /**
      * Удаляет view из текущей иерархии HostView.
-     * Для применения изменений вызовите requestLayout.
      * @param children view которые нужно удалить.
      */
     protected fun remove(
         children: Collection<ActiveChild<*, *>>
     ) {
+        if (children.isEmpty()) return
         // чтобы не вызывать requestLayout после каждого изменения используются методы ...InLayout.
         // удалем view.
         children.forEach { child ->
             removeViewInLayout(child.view)
         }
+        requestLayout() // После удаления запрашиваем requestLayout
     }
 
-    protected fun remove(
-        child: ActiveChild<*, *>
-    ) {
-        // чтобы не вызывать requestLayout после каждого изменения используются методы ...InLayout.
-        // удалем view.
-        removeViewInLayout(child.view)
-    }
-
-    protected fun beginTransition(
-        transition: Transition?,
-        onStart: () -> Unit,
-        onEnd: () -> Unit,
-        changes: () -> Unit,
-    ) {
-        // Корректная последовательность: Применяем изменения -> Старт анимации -> Конец анимации
-        if (transition == null) {
-            changes.invoke()
-            onStart()
-            onEnd()
-            return
-        }
-        transition.addCallbacks(onStart = { onStart() }, onEnd = { onEnd() })
-        // beginDelayedTransition работает только если sceneRoot.isLaidOut() == true
-        if (ViewCompat.isLaidOut(this)) {
-            TransitionManager.beginDelayedTransition(this, transition)
-            changes.invoke()
-        } else {
-            // doOnLayout вызывается до присваивания isLaidOut = true, поэтому не работает
-            doOnPreDraw {
-                TransitionManager.beginDelayedTransition(this, transition)
-                changes.invoke()
-            }
-        }
+    private fun log(text: String){
+        Log.d("VDEB", "$text ${resources.getResourceName(id)}")
     }
 
     /**
@@ -317,7 +292,7 @@ abstract class HostView @JvmOverloads constructor(
     protected fun saveActive(
         active: ActiveChild<*, *>?,
     ) {
-        if (active == null) return
+        active ?: return
         inactiveChildren[active.id] = InactiveChild(active.view.saveHierarchyState())
     }
 

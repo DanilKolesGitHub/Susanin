@@ -23,12 +23,12 @@ class StackHostView @JvmOverloads constructor(
 
     /**
      * Активные экраны/view, которые добавлены в StackHostView.
-     * Все view в состоянии STARTED, кроме последнего/верхнего он в RESUMED.
+     * Все view в состоянии CREATED/STARTED, кроме последнего/верхнего он в RESUMED.
      */
     private var currentChildren = listOf<ActiveChild<*, *>>()
 
     /**
-     * Сохраняем состояния всх активных view.
+     * Сохраняем состояния всех активных view.
      */
     override fun saveActive() {
         currentChildren.forEach {
@@ -37,7 +37,7 @@ class StackHostView @JvmOverloads constructor(
     }
 
     /**
-     * Восстанавливаем состояния всх активных view.
+     * Восстанавливаем состояния всех активных view.
      */
     override fun restoreActive() {
         currentChildren.forEach {
@@ -107,9 +107,10 @@ class StackHostView @JvmOverloads constructor(
             // Во время анимации все view в состоянии STARTED.
             // По окончании анимации верхняя RESUMED, а удаленные DESTROYED.
             beginTransition(
-                provideAnimator = { provideTransition(currentChild, activeChild, removedChildren, insertedChildren, activeFromStack) },
-                add = { add(activeFromStack, activeChildren) },
-                remove = { remove(removedChildren) },
+                addToBack = activeFromStack,
+                addChildren = activeChildren,
+                removeChildren = removedChildren,
+                animatorProvider = { provideTransition(currentChild, activeChild, removedChildren, insertedChildren, activeFromStack) },
                 onStart = {
                     removedChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::pause)
                     currentChild.lifecycle.pause()

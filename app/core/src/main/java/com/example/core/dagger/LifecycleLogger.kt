@@ -9,7 +9,7 @@ class LifecycleLogger(val pref: String = "", val f: (String, String) -> Unit): L
     private val _state = MutableStateFlow<String>("");
     val state: StateFlow<String> = _state
 
-    init{
+    init {
         log("constructor")
     }
 

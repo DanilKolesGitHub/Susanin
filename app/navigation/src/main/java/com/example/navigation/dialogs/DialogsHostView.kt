@@ -25,15 +25,26 @@ class DialogsHostView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : HostView(context, attrs, defStyleAttr) {
 
-    private var currentChildren = listOf<ActiveChild<*, *>>()
     private var currentDialogs: ChildDialogs<*, *>? = null
 
+    /**
+     * Активные экраны/view, которые добавлены в DialogsHostView.
+     * Все view в состоянии CREATED/STARTED, кроме последнего/верхнего он в RESUMED.
+     */
+    private var currentChildren = listOf<ActiveChild<*, *>>()
+
+    /**
+     * Сохраняем состояния всех активных view.
+     */
     override fun saveActive() {
         currentChildren.forEach {
             saveActive(it)
         }
     }
 
+    /**
+     * Восстанавливаем состояния всех активных view.
+     */
     override fun restoreActive() {
         currentChildren.forEach {
             restoreActive(it)
@@ -72,7 +83,7 @@ class DialogsHostView @JvmOverloads constructor(
         dialogs: ChildDialogs<C, T>,
         hostViewLifecycle: Lifecycle,
     ) {
-        endTransition()
+        endTransition() // останавливаем анимацию
         @Suppress("UNCHECKED_CAST")
         val currentDialogs = currentDialogs as ChildDialogs<C, T>?
         @Suppress("UNCHECKED_CAST")
@@ -84,9 +95,10 @@ class DialogsHostView @JvmOverloads constructor(
         // Во время анимации текущая и новая view в состоянии STARTED.
         // По окончании анимации новая RESUMED, а текущая DESTROYED.
         beginTransition(
-            provideAnimator = { provideTransition(removedChildren, insertedChildren) },
-            add = { add(false, activeChildren) },
-            remove = { remove(removedChildren) },
+            addToBack = false,
+            addChildren = activeChildren,
+            removeChildren = removedChildren,
+            animatorProvider = { provideTransition(removedChildren, insertedChildren) },
             onStart = {
                 removedChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::pause)
                 currentChild?.lifecycle?.pause()
@@ -130,6 +142,7 @@ class DialogsHostView @JvmOverloads constructor(
 
     /**
      * Предоставляет анимацию.
+     * Для каждого экрана берется enterThis или exitThis анимация.
      *
      * @param removedChildren Удаляемые экраны.
      * @param insertedChildren Добавленные экраны.

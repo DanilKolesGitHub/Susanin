@@ -118,9 +118,10 @@ class PagesHostView @JvmOverloads constructor(
             // Во время анимации все view в состоянии STARTED.
             // По окончании анимации верхняя RESUMED, а удаленные DESTROYED.
             beginTransition(
-                provideAnimator = { provideTransition(currentChild, activeChild, removedChildren, insertedChildren, back) },
-                add = { add(false, activeChildren) },
-                remove = { remove(removedChildren) },
+                addToBack = false,
+                addChildren = activeChildren,
+                removeChildren = removedChildren,
+                animatorProvider = { provideTransition(currentChild, activeChild, removedChildren, insertedChildren, back) },
                 onStart = {
                     removedChildren.map(ActiveChild<*,*>::lifecycle).forEach(LifecycleRegistry::pause)
                     currentChild.lifecycle.pause()
@@ -162,6 +163,7 @@ class PagesHostView @JvmOverloads constructor(
         val activeChildren = LinkedList<ActiveChild<C, T>>()
         val insertedChildren = LinkedList<ActiveChild<C, T>>()
         val removedChildren = LinkedList<ActiveChild<C, T>>()
+        // Текущие экраны в иерархии
         val currentMap = currentChildren.associateByTo(LinkedHashMap(), ActiveChild<*,*>::id) { it as ActiveChild<C, T> }
         // Создаем или переиспользуем выбранный экран.
         val selectedItem = pages.items[pages.selectedIndex] as Child.Created<C, T>
